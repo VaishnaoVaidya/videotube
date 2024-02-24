@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { HiOutlineBars3 } from "react-icons/hi2";
 import { MdOutlineVideoCall } from "react-icons/md";
 import { IoMdNotificationsOutline } from "react-icons/io";
@@ -10,36 +10,46 @@ import { AiOutlineLike } from "react-icons/ai";
 import { MdOutlineHistory } from "react-icons/md";
 import { LuUserSquare } from "react-icons/lu";
 import { BsCollectionPlayFill } from "react-icons/bs";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import { Link, useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-
 import axios from "axios";
 import UserSettings from "../UserSettings/UserSettings";
+import UserContext from "../../context/UserContext";
 
 const Header = () => {
   const host = "http://localhost:8000/api/v1";
 
   const navigate = useNavigate();
-  const [sidebar, setSidebar] = useState(true);
-  const [signIn, setSignIn] = useState(false);
+  const {signIn ,setSignIn} = useContext(UserContext);
   const [userProfile, setUserProfile] = useState({});
   const [userDetails, setUserDetails] = useState(false);
-
+  const [refreshToken, setRefreshToken] = useState("");
+  const {sidebar, setSidebar} = useContext(UserContext)
+  
   useEffect(() => {
     const fetchUser = async () => {
-      try {
+      try { 
+        // Check if there's a stored access token in localStorage
+        const accessToken = localStorage.getItem("accessToken");
+        console.log("accessToken: " + accessToken);
+        const response = await axios.get(`${host}/users/current-user`, 
+        {
+          headers: {
+            Authorization: `Bearer ${ accessToken }`,
+          }
+        });
 
-        
-        const response = await axios.get(`${host}/users/current-user`);
-
-        console.log("UserProfile", response.data);
+        console.log("UserProfile", response.data.data.user[0].fullName);
         console.log("success", response.data.data);
 
         if (response.data.success) {
-          setUserProfile(response.data.user);
           setSignIn(true);
+          setUserProfile(response.data.data.user[0]);
+          console.log(userProfile.fullName);
         } else if (response.data.status === 401) {
           // Access token expired; try refreshing it
+          console.log("Access token expire");
+          setRefreshToken(response.data.refreshToken)
           await refreshAccessToken();
         }
       } catch (error) {
@@ -51,15 +61,10 @@ const Header = () => {
     fetchUser();
   }, []);
 
+  //toDo: refresh token if acces token expire
   const refreshAccessToken = async () => {
     try {
-      const refreshToken = Cookies.get("refreshToken");
-
-      if (!refreshToken) {
-        console.error("Refresh token not found. Redirecting to sign-in page.");
-        navigate("/signin");
-        return;
-      }
+      
 
       const refreshResponse = await axios.post(
         `${host}/users/refresh-token`,
@@ -69,7 +74,6 @@ const Header = () => {
 
       if (refreshResponse.data.success) {
         const accessToken = refreshResponse.data.data.accessToken;
-        Cookies.set("accessToken", accessToken);
         setSignIn(true);
         console.log("Access token refreshed successfully.", accessToken);
       } else {
@@ -99,8 +103,10 @@ const Header = () => {
     setUserDetails((user) => !user);
   };
 
+
   return (
-    <div>
+    <div onClick={(e) => userDetails === true && setUserDetails(false)}
+    >
       <div
         style={{
           height: "56px",
@@ -237,42 +243,51 @@ const Header = () => {
             fontWeight: "600",
           }}
         >
-          <MdOutlineVideoCall
-            style={{ padding: 8, cursor: "pointer" }}
-            size={30}
-          />
-          <IoMdNotificationsOutline
-            style={{ padding: 8, cursor: "pointer" }}
-            size={30}
-          />
+          
+          
           {signIn ? (
-            userProfile &&
-            userProfile.data && (
+            userProfile && (
               <>
+              <Link style={{textDecoration: "none"}} to={`/channel/upload`}><MdOutlineVideoCall
+            style={{ padding: 8, cursor: "pointer" }}
+            size={30}
+          /></Link>
+              <IoMdNotificationsOutline
+            style={{ padding: 8, cursor: "pointer" }}
+            size={30}
+          />
                 <img
                   onClick={handleUserDetails}
-                  src={userProfile.data?.avatar || "images/unknown.png"}
+                  src={userProfile?.avatar || "images/unknown.png"}
                   style={{
                     width: 30,
                     height: 30,
                     borderRadius: "50%",
+                    border: "1px solid rgba(255, 255, 255)",
                     cursor: "pointer",
                   }}
                   alt={""}
                 />
-              </>
+                </>
             )
           ) : (
-            <Link to="/signin">
+            <>
+            <BsThreeDotsVertical onClick={handleUserDetails} style={{paddingRight: 13, cursor: "pointer"}}/>
+            <Link to="/signin"
+            style={{
+              textDecoration: "none",
+            }}
+            >
               <p
                 style={{
                   border: "1px solid gray",
-                  paddingInline: 4,
+                  paddingInline: 15,
                   display: "flex",
-                  borderRadius: "10px",
+                  borderRadius: "30px",
                   fontSize: 14,
                   justifyContent: "center",
                   alignItems: "center",
+                  textDecoration: "none",
                   color: "#4f8ed4",
                 }}
               >
@@ -283,12 +298,13 @@ const Header = () => {
                 SignIn
               </p>
             </Link>
+            </>
           )}
 
           <>
             {/* // toggle user details */}
 
-            <UserSettings userDetails={userDetails} userProfile={userProfile} />
+            <UserSettings userDetails={userDetails} userProfile={userProfile} handleUserDetails={handleUserDetails} />
           </>
         </div>
       </div>
@@ -299,19 +315,21 @@ const Header = () => {
         <>
           <section
             style={{
-              width: "200px",
+              width: 200,
               height: "100vh",
               position: "absolute",
               marginTop: 56,
               backgroundColor: "rgb(0, 0, 0)",
               color: "#fff",
               padding: "20px",
-              overflowY: "auto",
+              overflowY: "hidden",
+              position: "fixed",
+              // overflowY: "scroll",
             }}
           >
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               <Link
-                to="#"
+                to="/"
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -333,7 +351,7 @@ const Header = () => {
                 </li>
               </Link>
               <Link
-                to="#"
+                to="/likedVideos"
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -355,7 +373,7 @@ const Header = () => {
                 </li>
               </Link>
               <Link
-                to="#"
+                to="/history"
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -377,7 +395,7 @@ const Header = () => {
                 </li>
               </Link>
               <Link
-                to="#"
+                to={`/channel/${userProfile?.username}`}
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -395,11 +413,11 @@ const Header = () => {
                   }}
                 >
                   <LuUserSquare style={{ paddingRight: 20 }} size={25} />
-                  My Content
+                  Your Channel
                 </li>
               </Link>
               <Link
-                to="#"
+                to="/collections"
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -424,7 +442,7 @@ const Header = () => {
                 </li>
               </Link>
               <Link
-                to="#"
+                to="/subscriptions"
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -442,7 +460,7 @@ const Header = () => {
                   }}
                 >
                   <></>
-                  Subscribers
+                  Subscriptions
                 </li>
               </Link>
             </ul>
@@ -458,7 +476,6 @@ const Header = () => {
               marginTop: 56, // Adjust the padding as needed
               backgroundColor: "rgb(0, 0, 0)", // Sidebar background color
               color: "#fff", // Text color
-              overflowY: "auto", // Enable vertical scrollbar when needed
             }}
           >
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -538,7 +555,7 @@ const Header = () => {
                 </li>
               </Link>
               <Link
-                to="/mycontent"
+                to={`/channel/${userProfile?.username}`}
                 style={{
                   color: "#fff",
                   textDecoration: "none",
@@ -559,7 +576,7 @@ const Header = () => {
                   }}
                 >
                   <LuUserSquare style={{}} size={25} />
-                  My Content
+                  Your Channel
                 </li>
               </Link>
               <Link

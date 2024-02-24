@@ -71,7 +71,7 @@ const SignUp = () => {
                 paddingLeft: 9,
                 fontSize: 15,
                 background: "black",
-                borderColor: "2px solid rgb(45 143 228)",
+                border: "2px solid rgb(45 143 228)",
                 color: "white",
               }}
               type="text"
@@ -80,8 +80,8 @@ const SignUp = () => {
               placeholder="username"
               name="username"
               maxLength={50}
-              onFocus={(e) => e.target.style.borderColor = "rgb(102 45 228)"}
-            //   onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
+              onFocus={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
+              onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
             />
             <input
               style={{
@@ -92,7 +92,7 @@ const SignUp = () => {
                 paddingLeft: 9,
                 fontSize: 15,
                 background: "black",
-                borderColor: "2px solid rgb(45 143 228)",
+                border: "2px solid rgb(45 143 228)",
                 color: "white",
               }}
               type="text"
@@ -101,8 +101,8 @@ const SignUp = () => {
               placeholder="Email"
               name="email"
               maxLength={50}
-              onFocus={(e) => e.target.style.borderColor = "rgb(102 45 228)"}
-            //   onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
+              onFocus={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
+              onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
             />
             <input
               style={{
@@ -113,7 +113,7 @@ const SignUp = () => {
                 paddingLeft: 9,
                 fontSize: 15,
                 background: "black",
-                borderColor: "2px solid rgb(45 143 228)",
+                border: "2px solid rgb(45 143 228)",
                 color: "white",
               }}
               type="Password"
@@ -122,8 +122,8 @@ const SignUp = () => {
               placeholder="Password"
               name="Password"
               maxLength={50}
-              onFocus={(e) => e.target.style.borderColor = "rgb(102 45 228)"}
-            //   onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
+              onFocus={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
+              onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
             />
 
             <button
@@ -146,7 +146,7 @@ const SignUp = () => {
                 fontSize: 15,
                 borderColor: "2px solid rgb(45 143 228)",
                 cursor: "pointer",
-                 fontSize: 19, fontWeight: "bold"}}>Already have an account!! <span onClick={()=> navigate("/signup")} style={{color: "#34add7"}}> LogIn</span></h6>
+                 fontSize: 19, fontWeight: "bold"}}>Already have an account!! <span onClick={()=> navigate("/signin")} style={{color: "#34add7"}}> LogIn</span></h6>
           </form>
         </div>
       </div>

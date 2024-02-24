@@ -1,6 +1,7 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, {  useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import UserContext from "../../context/UserContext";
 
 const SignIn = () => {
 
@@ -9,6 +10,7 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +29,9 @@ const SignIn = () => {
       );
 
       if (response.data.success) {
-        console.log(response.data.data);
+        console.log(response.data.data.user);
+        console.log(response.data.data.accessToken);
+        localStorage.setItem('accessToken', response.data.data.accessToken);
         navigate("/");
       } else {
         console.error("Authentication failed:", response.data.message);
@@ -87,7 +91,7 @@ const SignIn = () => {
               placeholder="username"
               name="username"
               maxLength={50}
-              onFocus={(e) => (e.target.style.borderColor = "rgb(102 45 228)")}
+              onFocus={(e) => (e.target.style.borderColor = "rgb(45 143 228)")}
               //   onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
             />
             <input
@@ -108,7 +112,7 @@ const SignIn = () => {
               placeholder="Password"
               name="Password"
               maxLength={50}
-              onFocus={(e) => (e.target.style.borderColor = "rgb(102 45 228)")}
+              onFocus={(e) => (e.target.style.borderColor = "rgb(45 143 228)")}
               //   onBlur={(e) => e.target.style.borderColor = "rgb(45 143 228)"}
             />
 

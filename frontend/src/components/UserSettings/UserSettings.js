@@ -1,12 +1,22 @@
-import React from 'react'
-import {Link} from 'react-router-dom'
+import React, {useContext} from 'react'
+import {Link, useNavigate} from 'react-router-dom'
 import { PiSignOut } from "react-icons/pi";
 import { IoSettingsOutline } from "react-icons/io5";
+import UserContext from '../../context/UserContext';
 
 const UserSettings = (props) => {
-    const {userDetails, userProfile} = props;
+    const {userDetails, userProfile, handleUserDetails} = props;
+    const navigate = useNavigate()
+    const { signIn} = useContext(UserContext)
+
+
+    const handleSignOut = () => {
+      localStorage.removeItem('accessToken' , "")
+      alert("Do you want to sign out")
+      navigate("/signin")
+    }
   return (
-    <div>
+    <div onClick={handleUserDetails}>
     {userDetails && (
               <>
                 <div
@@ -17,15 +27,15 @@ const UserSettings = (props) => {
                     flexDirection: "column",
                     justifyContent: "center",
                     alignItems: "center",
-                    top: 10,
                     borderRadius: 5,
+                    position: "absolute", 
                     right: 90,
-                    position: "absolute",
+                    top: 10,
                     background: "#242121",
                     color: "white",
                   }}
                 >
-                  {userProfile && userProfile.data && (
+                  {userProfile && (
                     <div
                       style={{
                         display: "flex",
@@ -37,7 +47,7 @@ const UserSettings = (props) => {
                       }}
                     >
                       <img
-                        src={userProfile.data.avatar || "images/unknown.png"}
+                        src={userProfile.avatar || "images/unknown.png"}
                         style={{
                           width: 50,
                           height: 50,
@@ -47,13 +57,13 @@ const UserSettings = (props) => {
                         alt={""}
                       />
                       <div style={{ margin: "0px 0" }}>
-                        <h6 style={{ margin: 0 }}>{userProfile.data.email}</h6>
+                        <h6 style={{ margin: 0 }}>{userProfile.fullName}</h6>
                         <h6 style={{ margin: "1px", marginLeft: "2px" }}>
-                          @{userProfile.data.username}
+                          @{userProfile?.username}
                         </h6>
                         <Link
                           style={{ margin: 0, textDecoration: "none" }}
-                          to={`/channel/${userProfile.data.username}`}
+                          to={`/channel/${userProfile?.username}`}
                         >
                           <p style={{ paddingTop: 2, color: "#0999ff",textDecoration: "none" , fontSize: 13}}>
                             View your channel
@@ -77,17 +87,22 @@ const UserSettings = (props) => {
                       textAlign: "center",
                     }}
                   >
+                   {signIn && 
+                   <>
                     <li
+                    onClick={handleSignOut}
                       style={{
                         paddingBottom: 7,
                         alignSelf: "center",
                         display: "flex",
                         margin: 2,
+                        cursor: "pointer",
                       }}
                     >
                       <PiSignOut style={{ paddingRight: 4 }} size={25} />
                       SignOut
                     </li>
+                    </>}
                     <li
                       style={{
                         paddingBottom: 7,
