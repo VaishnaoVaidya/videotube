@@ -21,10 +21,11 @@ const Header = () => {
 
   const navigate = useNavigate();
   const {signIn ,setSignIn} = useContext(UserContext);
-  const [userProfile, setUserProfile] = useState({});
   const [userDetails, setUserDetails] = useState(false);
   const [refreshToken, setRefreshToken] = useState("");
   const {sidebar, setSidebar} = useContext(UserContext)
+  const {userProfile, setUserProfile} = useContext(UserContext)
+
   
   useEffect(() => {
     const fetchUser = async () => {
@@ -39,7 +40,7 @@ const Header = () => {
           }
         });
 
-        console.log("UserProfile", response.data.data.user[0].fullName);
+        console.log("UserProfile", response.data.data.user[0].email);
         console.log("success", response.data.data);
 
         if (response.data.success) {
@@ -121,6 +122,7 @@ const Header = () => {
           backgroundColor: "#000",
           color: "#fff",
           paddingInline: 16,
+          zIndex: 1000
         }}
       >
         {/* Start Section */}
@@ -248,7 +250,7 @@ const Header = () => {
           {signIn ? (
             userProfile && (
               <>
-              <Link style={{textDecoration: "none"}} to={`/channel/upload`}><MdOutlineVideoCall
+              <Link style={{textDecoration: "none", color: "white"}} to={`/channel/upload`}><MdOutlineVideoCall
             style={{ padding: 8, cursor: "pointer" }}
             size={30}
           /></Link>
@@ -324,6 +326,7 @@ const Header = () => {
               padding: "20px",
               overflowY: "hidden",
               position: "fixed",
+              zIndex: 1000
               // overflowY: "scroll",
             }}
           >
@@ -476,6 +479,7 @@ const Header = () => {
               marginTop: 56, // Adjust the padding as needed
               backgroundColor: "rgb(0, 0, 0)", // Sidebar background color
               color: "#fff", // Text color
+              zIndex: 1000
             }}
           >
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>

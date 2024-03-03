@@ -6,8 +6,8 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   const host = "http://localhost:8000/api/v1";
-  const [videos, setVideos] = useState([]);
   const { sidebar } = useContext(UserContext);
+  const [videos, setVideos] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,7 +42,7 @@ const Home = () => {
           style={{
             marginLeft: 240,
             paddingTop: 56,
-            background: "white",
+            background: "rgb(15, 15, 15)",
             flexWrap: "wrap",
           }}
         >
@@ -55,7 +55,7 @@ const Home = () => {
               padding: 5,
               alignItems: "flex-end",
               flexWrap: "wrap",
-              background: "#000",
+              background: "rgb(15, 15, 15)",
               display: "flex",
               gap: 15
             }}
@@ -69,13 +69,14 @@ const Home = () => {
                   boxShadow: "inherit",
                 }}
               >
-                <Link to={`/watch/${video?.owner?._id}`}>
+                <Link to={`/watch/${video._id}`}>
                   {/* Thumbnail */}
                   <img
                     src={video.thumbnail || "images/1.png"}
                     style={{
-                      width: 400,
+                      width: '100%',
                       height: 220,
+                      objectFit: 'cover',
                       borderRadius: " 10px",
                     }}
                     alt=""
@@ -96,7 +97,7 @@ const Home = () => {
                     <Link to={`/${video?.owner?.username}`}>
                       <img
                         src={video.owner.avatar}
-                        style={{ width: 50, borderRadius: "50%" }}
+                        style={{ width: 40, height: 40,  borderRadius: "50%" , marginRight: 10 }}
                         alt=""
                       />
                     </Link>
@@ -146,7 +147,7 @@ const Home = () => {
                       }}
                       to="/"
                     >
-                      {video.views} {video.views === 0 || 1 ? "view" : "views"}{" "}
+                      {video.views} {video.views === 0 || 1 ? "view" : "views"}{"  | "}
                       <span>
                         {formatDistanceToNow(new Date(video.createdAt))} ago
                       </span>
@@ -164,7 +165,7 @@ const Home = () => {
           style={{
             marginLeft: 80,
             paddingTop: 56,
-            background: "white",
+            background: "rgb(15, 15, 15)",
             flexWrap: "wrap",
           }}
         >
@@ -177,7 +178,7 @@ const Home = () => {
               padding: 5,
               alignItems: "flex-end",
               flexWrap: "wrap",
-              background: "#000",
+              background: "#rgb(15, 15, 15)",
             }}
           >
             {videos.map((video, i) => (
@@ -189,13 +190,13 @@ const Home = () => {
                   boxShadow: "inherit",
                 }}
               >
-                <Link to={`/watch?v=${video?.owner?._id}`}>
+                <Link to={`/watch/${video._id}`}>
                   {/* Thumbnail */}
                   <img
                     src={video.thumbnail || "images/1.png"}
                     style={{
-                      width: "23%",
-                      objectFit: "contain",
+                      width: "100%",
+                      height: 190,
                       borderRadius: " 10px",
                     }}
                     alt=""
@@ -216,7 +217,7 @@ const Home = () => {
                     <Link to={`/${video?.owner?.username}`}>
                       <img
                         src={video.owner.avatar}
-                        style={{ width: 50, borderRadius: "50%" }}
+                        style={{ width: 40,height: 40, borderRadius: "50%" , marginRight: 10}}
                         alt=""
                       />
                     </Link>
@@ -266,7 +267,7 @@ const Home = () => {
                       }}
                       to="/"
                     >
-                      {video.views} {video.views === 0 || 1 ? "view" : "views"}{" "}
+                      {video.views} {video.views === 0 || 1 ? "view" : "views"}{"  | "}
                       <span>
                         {formatDistanceToNow(new Date(video.createdAt))} ago
                       </span>
