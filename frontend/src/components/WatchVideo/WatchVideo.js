@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import { formatDistanceToNow } from "date-fns";
 import { AiOutlineLike } from "react-icons/ai";
-import { BiDislike } from "react-icons/bi";
+import { BiDislike, BiLike, BiSolidDislike, BiSolidLike } from "react-icons/bi";
 import { PiShareFat } from "react-icons/pi";
 import { MdPlaylistAdd } from "react-icons/md";
 import { HiOutlineDotsVertical } from "react-icons/hi";
@@ -16,8 +16,15 @@ const WatchvideoDetails = () => {
   console.log("searchId: " + videoId);
   const [videoDetails, setVideoDetails] = useState({});
   const { sidebar } = useContext(UserContext);
+  const { userProfile } = useContext(UserContext);
+  const userId = userProfile._id;
 
   const [videos, setVideos] = useState([]);
+  const [videoLikeStatus, setVideoLikeStatus] = useState(undefined);
+  const [videoLikesCount, setVideoLikesCount] = useState();
+  const [videoDislike, setVideoDislike] = useState([]);
+  const [like, setLike] = useState({});
+  const [dislike, setDislike] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +38,7 @@ const WatchvideoDetails = () => {
         });
 
         if (!accessToken) {
-            alert("please login or signUp to grant access");
+          alert("please login or signUp to grant access");
         }
         // console.log('Response Data Type:', response.data.data);
 
@@ -58,6 +65,7 @@ const WatchvideoDetails = () => {
   // }
 
   useEffect(() => {
+
     const accessToken = window.localStorage.getItem("accessToken");
     console.log(
       accessToken,
@@ -72,14 +80,74 @@ const WatchvideoDetails = () => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+
+        const likesResponse = await axios.get(`${host}/likes/video/${videoId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+
+        const hasLiked = likesResponse.data.data.some((like) => like.likedBy === userId)
+          setVideoLikeStatus(hasLiked);
+
+        // setVideoLikesCount(likeCount);
+
         console.log("Watch videoDetails: ", response.data.data);
+        console.log("likesResponse:" + JSON.stringify(likesResponse.data));
         setVideoDetails(response.data.data);
       } catch (error) {
         console.log("Watch videoDetails", error.message);
       }
     };
     fetchvideoDetails();
-  }, [videoId]); // Add videoDetailsId as a dependency to re-run the effect when the videoDetailsId changes
+  }, [videoId,]); // Add videoDetailsId as a dependency to re-run the effect when the videoDetailsId changes
+
+  // Correct
+useEffect(() => {
+  console.log('Component rendered with videoLikeStatus:', videoLikeStatus);
+}, [videoLikeStatus]);
+
+  const handleToggleLike = async () => {
+    const { _id: videoId } = videoDetails;
+    const userId = userProfile._id;
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      // Send the like/dislike status to the server
+      const response = await axios.post(
+        `${host}/likes/toggle/vl/${videoId}`,
+        {
+          likedBy: userId,
+          dislikedBy: null, // Reset dislike when liking
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const { liked, likeCount } = response.data;
+      // Update state with new like status and count
+      console.log('Before State Update:', videoLikeStatus);
+
+      setVideoLikeStatus((prevLiked) => !prevLiked);
+          
+      console.log('After State Update:', videoLikeStatus);
+
+        setVideoLikesCount(likeCount);
+      
+      console.log("Video likes:", response.data);
+    } catch (error) {
+      console.log("Toggle Video Like error", error.message);
+    }
+  };
+
+
+
+  const handleToggleDislike= async () => {
+    
+  }
 
   return (
     <>
@@ -120,7 +188,6 @@ const WatchvideoDetails = () => {
                   style={{
                     width: "100%",
                     height: "80vh",
-                    border: "1px solid #999999",
                     borderRadius: 15,
                     position: "static",
                   }}
@@ -286,6 +353,7 @@ const WatchvideoDetails = () => {
                   <div style={{ display: "flex", gap: 15, marginTop: -12 }}>
                     <div>
                       <button
+                       onClick={() => handleToggleLike(videoDetails)}
                         style={{
                           border: "1px solid #999",
                           background: "#272727",
@@ -304,8 +372,18 @@ const WatchvideoDetails = () => {
                           fontWeight: "600",
                         }}
                       >
-                        <AiOutlineLike style={{ paddingLeft: 5 }} size={20} />
-                        22k
+                        { console.log("videoLikeStatus:" + videoLikeStatus) &&
+                        videoLikeStatus === true ? (
+                          <>
+                            <BiSolidLike style={{ paddingLeft: 5 }} size={20} />
+                            22k
+                          </>
+                        ) : (
+                          <>
+                            <BiLike style={{ paddingLeft: 5 }} size={20} />
+                            22k
+                          </>
+                        )}
                       </button>
                       <span
                         style={{
@@ -315,6 +393,7 @@ const WatchvideoDetails = () => {
                         }}
                       />
                       <button
+                        onClick={() => handleToggleDislike(videoDetails)}
                         style={{
                           border: "1px solid #999",
                           cursor: "pointer",
@@ -332,7 +411,14 @@ const WatchvideoDetails = () => {
                           fontWeight: "bold",
                         }}
                       >
-                        <BiDislike style={{ paddingLeft: 5 }} size={20} />
+                        {videoDislike === true ? (
+                          <BiSolidDislike
+                            style={{ paddingLeft: 5 }}
+                            size={20}
+                          />
+                        ) : (
+                          <BiDislike style={{ paddingLeft: 5 }} size={20} />
+                        )}
                       </button>
                     </div>
 
@@ -393,10 +479,9 @@ const WatchvideoDetails = () => {
                   }}
                 ></div>
                 {/*  Comments on videos */}
-               <Comments/>
+                <Comments />
               </div>
             )}
-            
           </aside>
 
           {/* /videos suggestion */}
@@ -420,111 +505,116 @@ const WatchvideoDetails = () => {
                 color: "white",
               }}
             ></div>
-           
-           {/* suggest videos  */}
-           <div  style={{
+
+            {/* suggest videos  */}
+            <div
+              style={{
                 width: "100%",
                 marginTop: 10,
-              }}>
-           {videos.map((video, i) => (
-              <div
-                key={i}
-                style={{
-                  width: "100%",
-                  marginTop: 5,
-                  boxShadow: "inherit",
-                  display: "flex",
-                  flexDirection: "row",
-                  position: "relative",
-                }}
-              >
-
-
-                <Link to={`/watch/${video._id}`}>
-                  {/* Thumbnail */}
-                  <img
-                    src={video.thumbnail || "images/1.png"}
-                    style={{
-                      width: 170,
-                      height: 90,
-                      objectFit: "cover",
-                      borderRadius: " 10px",
-                    }}
-                    alt=""
-                  />
-                </Link>
-
+              }}
+            >
+              {videos.map((video, i) => (
                 <div
+                  key={i}
                   style={{
-                    display: "flex",
                     width: "100%",
-                    justifyContent: "space-between",
-                    padding: 1,
-                    alignItems: "flex-start",
                     marginTop: 5,
+                    boxShadow: "inherit",
+                    display: "flex",
+                    flexDirection: "row",
+                    position: "relative",
                   }}
                 >
+                  <Link to={`/watch/${video._id}`}>
+                    {/* Thumbnail */}
+                    <img
+                      src={video.thumbnail || "images/1.png"}
+                      style={{
+                        width: 170,
+                        height: 90,
+                        objectFit: "cover",
+                        borderRadius: " 10px",
+                      }}
+                      alt=""
+                    />
+                  </Link>
+
                   <div
                     style={{
                       display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      paddingLeft: 10,
+                      width: "100%",
+                      justifyContent: "space-between",
+                      padding: 1,
                       alignItems: "flex-start",
-                      color: "white",
+                      marginTop: 5,
                     }}
                   >
-                    <p
+                    <div
                       style={{
-                        fontSize: 16,
-                        fontWeight: "500",
-                        marginTop: -10,
-                        textDecoration: "none",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        paddingLeft: 10,
+                        alignItems: "flex-start",
                         color: "white",
                       }}
                     >
-                      {video?.title || video?.tittle}
-                    </p>
-                    <Link
+                      <p
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "500",
+                          marginTop: -10,
+                          textDecoration: "none",
+                          color: "white",
+                        }}
+                      >
+                        {video?.title || video?.tittle}
+                      </p>
+                      <Link
+                        style={{
+                          fontSize: 12,
+                          color: "#AAAAAA",
+                          fontWeight: "400",
+                          marginTop: -10,
+                          textDecoration: "none",
+                        }}
+                        to="/"
+                      >
+                        {video.owner?.fullName}
+                      </Link>
+                      <Link
+                        style={{
+                          marginTop: 0,
+                          fontSize: 12,
+                          color: "#AAAAAA",
+                          fontWeight: "400",
+                          gap: 8,
+                          textDecoration: "none",
+                        }}
+                        to="/"
+                      >
+                        {video.views}{" "}
+                        {video.views === 0 || 1 ? "view" : "views"}
+                        {"  | "}
+                        <span>
+                          {/* {formatDistanceToNow(new Date(video?.createdAt))} ago */}
+                        </span>
+                      </Link>
+                    </div>
+
+                    <div
                       style={{
-                        fontSize: 12,
-                        color: "#AAAAAA",
-                        fontWeight: "400",
-                        marginTop: -10,
-                        textDecoration: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        marginTop: -5,
                       }}
-                      to="/"
                     >
-                      {video.owner?.fullName}
-                    </Link>
-                    <Link
-                      style={{
-                        marginTop: 0,
-                        fontSize: 12,
-                        color: "#AAAAAA",
-                        fontWeight: "400",
-                        gap: 8,
-                        textDecoration: "none",
-                      }}
-                      to="/"
-                    >
-                      {video.views} {video.views === 0 || 1 ? "view" : "views"}
-                      {"  | "}
-                      <span>
-                        {/* {formatDistanceToNow(new Date(video?.createdAt))} ago */}
-                      </span>
-                    </Link>
+                      <HiOutlineDotsVertical />
+                    </div>
                   </div>
-
-                  <div style={{ cursor: "pointer" , display: "flex", marginTop: -5  }}>
-                  <HiOutlineDotsVertical />
                 </div>
-                </div>
-
-                
-              </div>
-            ))}
-           </div>
+              ))}
+            </div>
           </aside>
         </div>
       ) : (

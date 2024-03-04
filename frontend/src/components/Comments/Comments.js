@@ -13,7 +13,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdOutlineOutlinedFlag } from "react-icons/md";
 import {AiOutlineLike} from "react-icons/ai";
-import {BiDislike} from "react-icons/bi";
+import {BiDislike, BiLike, BiSolidDislike, BiSolidLike} from "react-icons/bi";
 
 const Comments = () => {
   // Inside your component
@@ -47,9 +47,8 @@ const Comments = () => {
 
 
   //like dislike comment
-  const [commentLikeId, setCommentLikeId] = useState({});
-  const [toggleLikeComment, setToggleLikeComment] = useState({});
-  const [commentDislikeId, setCommentDislikeId] = useState({});
+  const [commentLikeStatus, setCommentLikeStatus] = useState(false);
+  const [commentDislikeId, setCommentDislikeId] = useState(false);
 
 
 
@@ -264,39 +263,51 @@ const Comments = () => {
     }
   };
 
-  const handleLike = async(comment) => {
-    const {_id : commentId, } = comment
-    const userId = userProfile._id
-    setCommentLikeId(userId)
+
+  // Function to handle like/dislike toggle
+  const handleToggleLike = async (comment) => {
+    const { _id: commentId } = comment;
+    const userId = userProfile._id;
+
+    // Get the current like status for the specific comment
+    const currentLikeStatus = commentLikeStatus[commentId] || false;
+
+    // Toggle the like status for the specific comment
+    setCommentLikeStatus((prevStatus) => ({
+        ...prevStatus,
+        [commentId]: !currentLikeStatus,
+    }));
+
     const accessToken = localStorage.getItem("accessToken");
+
     try {
-      await axios.post(
-        `${host}/toggle/c/${commentId}`,
-        {
-          likedBy: commentLikeId, // Assuming editedComment is an object with commentId as keys
-          dislikedBy: null,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      console.log("liking ", `liked by ${userId}`);
-      } catch (error) {
-        console.log("liking Comment error", error.message);
-      } finally {
-        setConfirmDeletion(null);
-        setDeleteLoading((preLoading) => ({
-          ...preLoading,
-          [commentId]: false,
+        // Send the like/dislike status to the server
+        const response = await axios.post(
+            `${host}/toggle/c/${commentId}`,
+            {
+                likedBy: currentLikeStatus ? null : userId,
+                dislikedBy: null, // Reset dislike when liking
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            }
+        );
+          console.log( "comment likes",response.data);
+        console.log(`Comment ${commentId} ${currentLikeStatus ? 'unliked' : 'liked'} by ${userId}`);
+    } catch (error) {
+        console.log("Toggle Comment Like error", error.message);
+        // Revert the state back if there is an error
+        setCommentLikeStatus((prevStatus) => ({
+            ...prevStatus,
+            [commentId]: currentLikeStatus,
         }));
-      }
+    }
+};
+  
 
-    
-  }
-
- const handleDislike = (comment) => {
+ const handleToggleDislike = (comment) => {
     
   }
 
@@ -732,24 +743,29 @@ const Comments = () => {
                       >
                         {comment?.content}
                       </p>
+                      
+                      {/* toggle comment like */}
 
                       <div style={{display: "flex", paddingTop: 7}}>
                       <button
-                      onClick={() => handleLike(comment)}
+                        onClick={() => handleToggleLike(comment)}
                         style={{
-                          cursor: "pointer",
-                          background: "#272727",
-                          padding: 4,
-                          width: 32,
-                          height: 32,
-                          color: "white",
-                          borderRadius: "50%",
+                            cursor: "pointer",
+                            background: "#272727",
+                            padding: 4,
+                            width: 32,
+                            height: 32,
+                            color: "white",
+                            borderRadius: "50%",
                         }}
-                      >
-                        {/* {commentLikeId ?} */}
-                        <AiOutlineLike  size={22} />
-                        
-                      </button>
+                    >
+                        {commentLikeStatus[comment._id] ? (
+                            <BiSolidLike size={22} />
+                        ) : (
+                            <BiLike size={22} />
+                        )}
+                    </button>
+
                       <span
                         style={{
                           fontSize: 10,
@@ -762,7 +778,7 @@ const Comments = () => {
                         }}
                       >22k</span>
                       <button
-                      onClick={() => handleDislike(comment)}
+                      onClick={() => handleToggleDislike(comment)}
                         style={{
                           cursor: "pointer",
                           background: "#272727",
@@ -773,7 +789,14 @@ const Comments = () => {
                           borderRadius: "50%",
                         }}
                       >
-                        <BiDislike  size={22} />
+                        {
+                          commentDislikeId ? (
+                            <BiSolidDislike
+                            size={22} />
+                          ) : (
+                            <BiDislike  size={22} />
+                          )
+                        }
                       </button>
                     </div>
                     </div>
