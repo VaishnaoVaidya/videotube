@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useMemo, useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import UserContext from "../../context/UserContext";
 import { formatDistanceToNow } from "date-fns";
@@ -10,19 +10,23 @@ import { MdPlaylistAdd } from "react-icons/md";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import Comments from "../Comments/Comments";
 
-const WatchvideoDetails = () => {
+const WatchVideoDetails = () => {
+  // const forceUpdate = useForceUpdate(); // Assuming you have a custom hook for forceUpdate
+
   const { videoId } = useParams();
   const host = "http://localhost:8000/api/v1";
   console.log("searchId: " + videoId);
   const [videoDetails, setVideoDetails] = useState({});
   const { sidebar } = useContext(UserContext);
   const { userProfile } = useContext(UserContext);
-  const userId = userProfile._id;
-
+  console.log("userProfile._id "+ ": " + userProfile._id);
   const [videos, setVideos] = useState([]);
-  const [videoLikeStatus, setVideoLikeStatus] = useState(undefined);
-  const [videoLikesCount, setVideoLikesCount] = useState();
-  const [videoDislike, setVideoDislike] = useState([]);
+  const [videoLikeStatus, setVideoLikeStatus] = useState(null);
+  const [videoLikesCount, setVideoLikesCount] = useState([]);
+  const [videoDislikeStatus, setVideoDislikeStatus] = useState(null);
+
+  const [likesArray, setLikesArray] = useState([]);
+
   const [like, setLike] = useState({});
   const [dislike, setDislike] = useState({});
 
@@ -65,88 +69,134 @@ const WatchvideoDetails = () => {
   // }
 
   useEffect(() => {
-
-    const accessToken = window.localStorage.getItem("accessToken");
-    console.log(
-      accessToken,
-      "\n",
-      "accessToken: ",
-      window.localStorage.getItem("accessToken")
-    );
-    const fetchvideoDetails = async () => {
+    const fetchVideoDetails = async () => {
       try {
+        const accessToken = window.localStorage.getItem("accessToken");
         const response = await axios.get(`${host}/videos/${videoId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-
+  
         const likesResponse = await axios.get(`${host}/likes/video/${videoId}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`
           },
-        })
-
-        const hasLiked = likesResponse.data.data.some((like) => like.likedBy === userId)
-          setVideoLikeStatus(hasLiked);
-
-        // setVideoLikesCount(likeCount);
-
-        console.log("Watch videoDetails: ", response.data.data);
-        console.log("likesResponse:" + JSON.stringify(likesResponse.data));
+        });
+  
+        const userId = userProfile._id;
+        const hasLiked = await likesResponse.data.data.some((like) => like.likedBy === userId);
+        const hasDisliked = await likesResponse.data.data.some((like) => like.dislikedBy === userId);
+        const likeDislikeArray = likesResponse.data.data;
+        const likesCount = likeDislikeArray.filter((like) => like.likedBy).length
+  
+        // Update the state after fetching the required data
+        setVideoLikeStatus(hasLiked);
+        setVideoDislikeStatus(hasDisliked)
+        setVideoLikesCount(likesCount);
         setVideoDetails(response.data.data);
+
+        setLikesArray(likeDislikeArray);
+
+        console.log("Video details fetched:", response.data.data);
+        console.log("Likes fetched:", likesResponse.data.data);
+        console.log("User profile ID:", userId);
+        console.log("Has liked:", hasLiked);
+        console.log("Likes count:", likesCount);
       } catch (error) {
-        console.log("Watch videoDetails", error.message);
+        console.log("Error fetching video details", error.message);
       }
     };
-    fetchvideoDetails();
-  }, [videoId,]); // Add videoDetailsId as a dependency to re-run the effect when the videoDetailsId changes
+    
+    fetchVideoDetails();
+  }, [videoId, userProfile, videoLikeStatus, videoLikesCount, videoDislikeStatus]);
+  
 
   // Correct
 useEffect(() => {
   console.log('Component rendered with videoLikeStatus:', videoLikeStatus);
-}, [videoLikeStatus]);
+}, [videoLikeStatus,]);
 
-  const handleToggleLike = async () => {
-    const { _id: videoId } = videoDetails;
-    const userId = userProfile._id;
-    const accessToken = localStorage.getItem("accessToken");
 
-    try {
-      // Send the like/dislike status to the server
-      const response = await axios.post(
-        `${host}/likes/toggle/vl/${videoId}`,
-        {
-          likedBy: userId,
-          dislikedBy: null, // Reset dislike when liking
+const memoizedLikesCount = useMemo(() => videoLikesCount, [videoLikesCount]);
+
+
+const handleToggleLike = async () => {
+  const { _id: videoId } = videoDetails;
+  const userId = userProfile._id;
+  console.log("handleToggleLike userId: " + userId);
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  try {
+    // Send the like/dislike status to the server
+    const response = await axios.post(
+      `${host}/likes/toggle/video/${videoId}`,
+      {
+        likedBy: userId ,
+        dislikedBy: null, // Reset dislike when liking
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      }
+    );
 
-      const { liked, likeCount } = response.data;
-      // Update state with new like status and count
-      console.log('Before State Update:', videoLikeStatus);
+    const { liked, likeCount } = response.data.data;
 
-      setVideoLikeStatus((prevLiked) => !prevLiked);
-          
-      console.log('After State Update:', videoLikeStatus);
+    // Update state with new like status and count
+    setVideoLikeStatus(liked);
+    setVideoLikesCount(likeCount);
+    // setVideoLikesCount((prevCount) => prevCount + 1);
 
-        setVideoLikesCount(likeCount);
-      
-      console.log("Video likes:", response.data);
-    } catch (error) {
-      console.log("Toggle Video Like error", error.message);
-    }
-  };
+    console.log("video like response: ",response.data);
+    console.log("Video liked:", response.data.data.liked);
+    // console.log("Video likes count:", response.data.data.likeCount);
+
+  } catch (error) {
+    console.log("Toggle Video Like error", error.message);
+  }
+};
+
 
 
 
   const handleToggleDislike= async () => {
-    
+    const { _id: videoId } = videoDetails;
+  const userId = userProfile._id;
+  console.log("handleToggleLike userId: " + userId);
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  try {
+    // Send the like/dislike status to the server
+    const response = await axios.post(
+      `${host}/likes/toggle/video/${videoId}`,
+      {
+        dislikedBy: userId,
+        likedBy: null, // Reset dislike when liking
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+   
+    const { disliked, likeCount } = response.data.data;
+
+    setVideoDislikeStatus(disliked);
+    // setVideoLikesCount((prevCount) => Math.max(0, prevCount - 1));
+
+    console.log("video dislike response: ",response.data);
+    console.log("Video disliked:", response.data.data.liked);
+    // console.log("Video disliked count:", response.data.data.likeCount);
+
+  } catch (error) {
+    console.log("Toggle Video Like error", error.message);
+  }
   }
 
   return (
@@ -372,16 +422,17 @@ useEffect(() => {
                           fontWeight: "600",
                         }}
                       >
-                        { console.log("videoLikeStatus:" + videoLikeStatus) &&
+                        { 
                         videoLikeStatus === true ? (
                           <>
                             <BiSolidLike style={{ paddingLeft: 5 }} size={20} />
-                            22k
+                            { videoLikesCount && (videoLikesCount) } 
                           </>
                         ) : (
                           <>
                             <BiLike style={{ paddingLeft: 5 }} size={20} />
-                            22k
+                            { videoLikesCount && (videoLikesCount)} 
+
                           </>
                         )}
                       </button>
@@ -411,7 +462,7 @@ useEffect(() => {
                           fontWeight: "bold",
                         }}
                       >
-                        {videoDislike === true ? (
+                        {videoDislikeStatus ? (
                           <BiSolidDislike
                             style={{ paddingLeft: 5 }}
                             size={20}
@@ -624,4 +675,4 @@ useEffect(() => {
   );
 };
 
-export default WatchvideoDetails;
+export default WatchVideoDetails;
