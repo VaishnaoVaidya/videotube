@@ -1,9 +1,4 @@
-import React, {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import UserContext from "../../context/UserContext";
 import axios from "axios";
 import { Link, useParams } from "react-router-dom";
@@ -12,8 +7,8 @@ import { MdOutlineEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdOutlineOutlinedFlag } from "react-icons/md";
-import {AiOutlineLike} from "react-icons/ai";
-import {BiDislike, BiLike, BiSolidDislike, BiSolidLike} from "react-icons/bi";
+import { AiOutlineLike } from "react-icons/ai";
+import { BiDislike, BiLike, BiSolidDislike, BiSolidLike } from "react-icons/bi";
 
 const Comments = () => {
   // Inside your component
@@ -24,7 +19,7 @@ const Comments = () => {
   const host = "http://localhost:8000/api/v1";
 
   const { userProfile } = useContext(UserContext);
-  console.log("userProfile comment :" + JSON.stringify(userProfile._id));
+  // console.log("userProfile comment :" + JSON.stringify(userProfile._id));
 
   const [addComment, setAddComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,18 +37,17 @@ const Comments = () => {
   const [selectedCommentId, setSelectedCommentId] = useState(null);
 
   const [reportComment, setReportComment] = useState({});
-  console.log("updateDeleteComment:", updateDeleteComment);
-  console.log("reportComment:", reportComment);
-
+  // console.log("updateDeleteComment:", updateDeleteComment);
+  // console.log("reportComment:", reportComment);
 
   //like dislike comment
-  const [commentLikeStatus, setCommentLikeStatus] = useState(false);
-  const [commentDislikeId, setCommentDislikeId] = useState(false);
+  const [commentLikeStatus, setCommentLikeStatus] = useState([]);
+  const [commentLikesCount, setCommentLikesCount] = useState(0);
+  const [commentDislikeStatus, setCommentDislikeStatus] = useState([]);
 
+  const [likesArray, setLikesArray] = useState([]);
 
-
-
-  //   console.log("userProfile for comments", userProfile);
+  // console.log("userProfile for comments", userProfile._id);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -81,9 +75,9 @@ const Comments = () => {
       // Update the state with the new comments
       setVideoComments(updatedCommentsResponse.data.comments);
 
-      console.log("Comment added successfully:", response.data);
+      // console.log("Comment added successfully:", response.data);
     } catch (error) {
-      console.log("Comment error", error.message);
+      // console.log("Comment error", error.message);
     } finally {
       setLoading(false);
       setAddComment("");
@@ -93,26 +87,177 @@ const Comments = () => {
 
   useEffect(() => {
     const fetchComments = async () => {
-      const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.get(`${host}/comments/${videoId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      if (response.statusCode === 404) {
-        return;
-      }
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        const response = await axios.get(`${host}/comments/${videoId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
-      console.log("Owner comment: ", response?.data?.data[0]?.owner);
-      console.log("video comment: ", response?.data?.data);
-      console.log(
-        "comment content: ",
-        response?.data?.data[0]?.comments[0]?.content
-      );
-      setVideoComments(response.data.data);
+        const likesResponse = await axios.get(`${host}/likes/comments`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const userId = userProfile._id;
+        // Assuming likeDislikeArray contains an array of comments with their like and dislike statuses
+        const likeDislikeArray = likesResponse.data.data.commentLikes;
+
+        // Extract and set like and dislike statuses for each comment
+        const updatedLikeStatus = {};
+        const updatedDislikeStatus = {}; // New object to store dislike statuses
+        const totalLikesCountMap = {};
+
+        likeDislikeArray.forEach((comment) => {
+          const commentId = comment.comment._id;
+          const hasLiked = comment.likedBy && comment.likedBy._id === userId; // Check if the comment has been liked
+          const hasDisliked =
+            comment.dislikedBy && comment.dislikedBy._id === userId; // Check if the comment has been disliked
+          // Update the state with the like and dislike statuses for the comment
+          updatedLikeStatus[commentId] = {
+            liked: hasLiked,
+          };
+
+          // Update the state with the dislike status for the comment
+          updatedDislikeStatus[commentId] = {
+            disliked: hasDisliked,
+          };
+
+           // Extract commentId and likedBy from the comment object
+  const { likedBy } = comment;
+
+  // Check if likedBy is not null and is an object
+  if (likedBy && typeof likedBy === 'object') {
+    // Count the number of likes for the current comment
+    const totalLikesCount = Object.keys(likedBy).length;
+
+    // Update the totalLikesCountMap with the count for the current commentId
+    totalLikesCountMap[commentId] = totalLikesCount;
+  } else {
+    // If likedBy is null or not an object, set the total likes count to 0
+    totalLikesCountMap[commentId] = 0;
+  }
+          // Calculate total likes count for the comment
+          const totalLikesCount = comment.likedBy !== null ? comment?.likedBy?.length : 0;
+
+  // Update the state with the total likes count for the comment
+  // console.log("totalLikesCountMap: ", totalLikesCountMap);
+  // console.log("updatedTotalLikesCount length: ", totalLikesCount);
+
+
+ 
+        });
+
+        // Update the state with the new like and dislike statuses for all comments
+        setCommentLikeStatus(updatedLikeStatus);
+        setCommentDislikeStatus(updatedDislikeStatus); // Set dislike status
+         // Set the total likes count state
+  setCommentLikesCount(totalLikesCountMap);
+
+        // console.log("Comments details fetched:", response.data.data);
+        // console.log("Comments Likes fetched:", likeDislikeArray);
+        // console.log("User profile ID:", userId);
+        // console.log("Total Likes Count:", totalLikesCount);
+
+        if (response.statusCode === 404) {
+          return;
+        }
+
+        setVideoComments(response.data.data);
+      } catch (error) {
+        console.error("Error fetching comments:", error.message);
+      }
     };
+
     fetchComments();
-  }, [videoId, confirmDeletion, editionLoading, editedComment]);
+  }, [
+    userProfile,
+    videoId,
+    confirmDeletion,
+    editionLoading,
+    editedComment,
+  ]);
+
+  const handleToggleLike = async (commentId) => {
+    // const { _id: commentId } = comment;
+    const userId = userProfile._id;
+    // console.log("handleToggleLike for comment userId: " + userId);
+
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      // Send the like/dislike status to the server
+      const response = await axios.post(
+        `${host}/likes/toggle/comment/${commentId}`,
+        {
+          likedBy: userId,
+          dislikedBy: null, // Reset dislike when liking
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const likeCount = response.data.data.likeCount;
+      const liked = response.data.data.liked;
+
+      // Update state with new like status and count
+      // Update state with new like status and count
+      setCommentLikeStatus((prevStatus) => ({
+        ...prevStatus,
+        [commentId]: liked,
+      }));
+      setCommentLikesCount(likeCount);
+      // setVideoLikesCount((prevCount) => prevCount + 1);
+
+      // console.log("comment like response: ", response.data);
+      // console.log("comment liked:", response.data.data.liked);
+      // console.log("Video likes count:", response.data.data.likeCount);
+    } catch (error) {
+      console.log("Toggle comment Like error", error.message);
+    }
+  };
+
+  const handleToggleDislike = async (commentId) => {
+    // const { _id: commentId } = comment;
+    const userId = userProfile._id;
+    // console.log("handleToggleLike comment userId: " + userId);
+
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      // Send the like/dislike status to the server
+      const response = await axios.post(
+        `${host}/likes/toggle/comment/${commentId}`,
+        {
+          dislikedBy: userId,
+          likedBy: null, // Reset dislike when liking
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const disliked = response.data.data.disliked;
+
+      setCommentDislikeStatus((prevStatus) => ({
+        ...prevStatus,
+        [commentId]: disliked,
+      })); // setVideoLikesCount((prevCount) => Math.max(0, prevCount - 1));
+
+      // console.log("comment dislike response: ", response.data);
+      // console.log("comment disliked:", response.data.data.disliked);
+      // console.log("comment disliked count:", response.data.data.likeCount);
+    } catch (error) {
+      console.log("Toggle Video Like error", error.message);
+    }
+  };
 
   useEffect(() => {
     if (addComment.length > 0) {
@@ -126,8 +271,6 @@ const Comments = () => {
     setDisplayButtons(false);
   };
 
-  
-
   // delete or edit comment
 
   const handleToggleCommentEdition = (comment) => {
@@ -136,12 +279,12 @@ const Comments = () => {
       owner: { _id: commentOwnerId },
     } = comment;
 
-    // console.log("Comment ID:", commentId);
-    // console.log("Owner ID:", commentOwnerId);
+    // // console.log("Comment ID:", commentId);
+    // // console.log("Owner ID:", commentOwnerId);
 
     const userProfileId = userProfile._id;
-    // console.log("User Profile ID:", userProfileId);
-    // console.log("currentCommentId.current:", currentCommentId);
+    // // console.log("User Profile ID:", userProfileId);
+    // // console.log("currentCommentId.current:", currentCommentId);
     // Reset all comments to false if a different comment is clicked
     if (commentId !== currentCommentId.current) {
       setUpdateDeleteComment({});
@@ -154,7 +297,7 @@ const Comments = () => {
       setUpdateDeleteComment((prevOptions) => {
         const newOptions = { ...prevOptions };
         newOptions[commentId] = !newOptions[commentId];
-        console.log("updateDeleteComment:", newOptions);
+        // console.log("updateDeleteComment:", newOptions);
         return newOptions;
       });
     } else {
@@ -163,7 +306,7 @@ const Comments = () => {
       setReportComment((prevOptions) => {
         const newOptions = { ...prevOptions };
         newOptions[commentId] = !newOptions[commentId];
-        console.log("reportComment:", newOptions);
+        // console.log("reportComment:", newOptions);
         return newOptions;
       });
     }
@@ -202,7 +345,7 @@ const Comments = () => {
       ...prevLoading,
       [commentId]: true,
     }));
-  
+
     const accessToken = localStorage.getItem("accessToken");
     try {
       await axios.patch(
@@ -216,11 +359,10 @@ const Comments = () => {
           },
         }
       );
-  
-      console.log("Comment updated successfully!");
-  
+
+      // console.log("Comment updated successfully!");
     } catch (error) {
-      console.log("Updating Comment error", error.message);
+      // console.log("Updating Comment error", error.message);
     } finally {
       // Reset the state or perform any necessary cleanup
       setEditedComment({});
@@ -231,8 +373,6 @@ const Comments = () => {
       }));
     }
   };
-  
-  
 
   const handleDeleteComment = async (e, commentId) => {
     e.preventDefault();
@@ -245,15 +385,14 @@ const Comments = () => {
     // Handle delete
     const accessToken = localStorage.getItem("accessToken");
     try {
-      const response = await axios.delete(`${host}/comments/c/${commentId}`,
-      {
+      const response = await axios.delete(`${host}/comments/c/${commentId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log("Delete comment id:", response.data);
+      // console.log("Delete comment id:", response.data);
     } catch (error) {
-      console.log("Deteting Comment error", error.message);
+      // console.log("Deteting Comment error", error.message);
     } finally {
       setConfirmDeletion(null);
       setDeleteLoading((preLoading) => ({
@@ -262,55 +401,6 @@ const Comments = () => {
       }));
     }
   };
-
-
-  // Function to handle like/dislike toggle
-  const handleToggleLike = async (comment) => {
-    const { _id: commentId } = comment;
-    const userId = userProfile._id;
-
-    // Get the current like status for the specific comment
-    const currentLikeStatus = commentLikeStatus[commentId] || false;
-
-    // Toggle the like status for the specific comment
-    setCommentLikeStatus((prevStatus) => ({
-        ...prevStatus,
-        [commentId]: !currentLikeStatus,
-    }));
-
-    const accessToken = localStorage.getItem("accessToken");
-
-    try {
-        // Send the like/dislike status to the server
-        const response = await axios.post(
-            `${host}/toggle/c/${commentId}`,
-            {
-                likedBy: currentLikeStatus ? null : userId,
-                dislikedBy: null, // Reset dislike when liking
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }
-        );
-          console.log( "comment likes",response.data);
-        console.log(`Comment ${commentId} ${currentLikeStatus ? 'unliked' : 'liked'} by ${userId}`);
-    } catch (error) {
-        console.log("Toggle Comment Like error", error.message);
-        // Revert the state back if there is an error
-        setCommentLikeStatus((prevStatus) => ({
-            ...prevStatus,
-            [commentId]: currentLikeStatus,
-        }));
-    }
-};
-  
-
- const handleToggleDislike = (comment) => {
-    
-  }
-
 
   return (
     <div style={{ flex: 1, width: "100%" }}>
@@ -463,8 +553,13 @@ const Comments = () => {
       {/* videos all comments  */}
       <div style={{ marginTop: 15, width: "96%" }}>
         {videoComments[0]?.comments.map((comment, index) => {
-          // console.log("createdAt:", comment?.createdAt);
-          // console.log("Time Ago:", formatDistanceToNow(new Date(comment?.createdAt)));
+          // // console.log("createdAt:", comment?.createdAt);
+          // // console.log("Time Ago:", formatDistanceToNow(new Date(comment?.createdAt)));
+
+          const commentLikesCount = likesArray.filter(
+            (like) =>
+              like.comment && like.comment._id === comment._id && like.likedBy
+          ).length;
 
           return (
             <div
@@ -482,18 +577,17 @@ const Comments = () => {
               {selectedCommentId === comment._id ? (
                 // Render the textarea for editing the selected comment
                 <div
-                        style={{
-                          flex: 1,
-                          width: "100%",
-                          display: "flex",
-                          flexDirection: "column",
-                        }}
-                      >
-                
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
                   <form
                     style={{
                       width: "98%",
-                      display:"flex",
+                      display: "flex",
                       gap: 10,
                       marginBottom: 30,
                       marginTop: 5,
@@ -618,15 +712,15 @@ const Comments = () => {
                   </form>
 
                   <div
-                        style={{
-                          flex: 1,
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                         {editionLoading[comment._id] && (
+                    style={{
+                      flex: 1,
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {editionLoading[comment._id] && (
                       <div
                         style={{
                           flex: 1,
@@ -663,398 +757,402 @@ const Comments = () => {
                              `}
                         </style>
                       </div>
-                    )}  
-
-                      </div>
-                 
+                    )}
+                  </div>
                 </div>
               ) : (
-                <div style={{display: "flex", flexDirection : "column", width: "100%",
-                }}>
-                 <div
+                <div
                   style={{
-                    width: "98%",
                     display: "flex",
-                  }}>
-                 <img
-                    src={comment?.owner?.avatar}
-                    alt=""
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                    }}
-                  />
-
+                    flexDirection: "column",
+                    width: "100%",
+                  }}
+                >
                   <div
                     style={{
+                      width: "98%",
                       display: "flex",
-                      width: "100%",
-                      justifyContent: "space-between",
-                      padding: 1,
-                      alignItems: "flex-start",
-                      marginTop: 9,
                     }}
                   >
+                    <img
+                      src={comment?.owner?.avatar}
+                      alt=""
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                      }}
+                    />
+
                     <div
                       style={{
                         display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        paddingLeft: 10,
+                        width: "100%",
+                        justifyContent: "space-between",
+                        padding: 1,
                         alignItems: "flex-start",
-                        color: "white",
+                        marginTop: 9,
                       }}
                     >
-                      <p
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "500",
-                          marginTop: -10,
-                          textDecoration: "none",
-                          color: "white",
-                        }}
-                      >
-                        {"@"}
-                        {comment?.owner?.username}{" "}
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: "400",
-                            marginTop: -10,
-                            textDecoration: "none",
-                            color: "#aaaaaa",
-                          }}
-                        >
-                          {formatDistanceToNow(new Date(comment?.createdAt))}{" "}
-                          ago
-                        </span>
-                      </p>
-
-                      <p
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "500",
-                          marginTop: 0,
-                          width: "95%",
-                          textDecoration: "none",
-                          color: "#fff",
-                        }}
-                      >
-                        {comment?.content}
-                      </p>
-                      
-                      {/* toggle comment like */}
-
-                      <div style={{display: "flex", paddingTop: 7}}>
-                      <button
-                        onClick={() => handleToggleLike(comment)}
-                        style={{
-                            cursor: "pointer",
-                            background: "#272727",
-                            padding: 4,
-                            width: 32,
-                            height: 32,
-                            color: "white",
-                            borderRadius: "50%",
-                        }}
-                    >
-                        {commentLikeStatus[comment._id] ? (
-                            <BiSolidLike size={22} />
-                        ) : (
-                            <BiLike size={22} />
-                        )}
-                    </button>
-
-                      <span
-                        style={{
-                          fontSize: 10,
-                          display: "flex",
-                          paddingTop: 4,
-                          marginRight: 4,
-                          color: "#AAAAAA",
-                          fontWeight: "500",  
-                          height: 30,
-                        }}
-                      >22k</span>
-                      <button
-                      onClick={() => handleToggleDislike(comment)}
-                        style={{
-                          cursor: "pointer",
-                          background: "#272727",
-                          padding: 3,
-                          width: 32,
-                          height: 32,
-                          color: "white",
-                          borderRadius: "50%",
-                        }}
-                      >
-                        {
-                          commentDislikeId ? (
-                            <BiSolidDislike
-                            size={22} />
-                          ) : (
-                            <BiDislike  size={22} />
-                          )
-                        }
-                      </button>
-                    </div>
-                    </div>
-                  </div>
-
-                  
-
-
-                  {/* comment edition */}
-                  <div
-                    style={{
-                      display: "flex",
-                      position: "absolute",
-                      right: 10,
-                      top: 5,
-                    }}
-                    onClick={() => handleToggleCommentEdition(comment)}
-                  >
-                    <HiOutlineDotsVertical
-                      id="editDeleteButtons" // Add the id here
-                      //  use this if using other than jsx tag like this use fo\r ******** HiOutlineDotsVertical******
-                      // onClick={(event) => {
-                      //   const commentId =
-                      //     event.currentTarget.getAttribute("data-comment-id");
-                      //   const ownerId =
-                      //     event.currentTarget.getAttribute("data-owner-id");
-
-                      //   if (commentId && ownerId) {
-                      //     console.log("Clicked CommentId:", commentId);
-                      //     console.log("Clicked OwnerId:", ownerId);
-                      //     handleToggleCommentEdition(commentId, ownerId);
-                      //   }
-                      // }}
-                      // data-comment-id={comment._id}
-                      // data-owner-id={comment.owner._id}
-                      style={{ cursor: "pointer" }}
-                      size={20}
-                    />
-
-                    {/* edit or delete comment options */}
-                    {updateDeleteComment[comment._id] && (
                       <div
-                        id="editDeleteButtons"
                         style={{
-                          borderRadius: 15,
-                          width: 120,
-                          height: 90,
-                          background: "#282828",
                           display: "flex",
                           flexDirection: "column",
                           justifyContent: "center",
-                          alignItems: "center",
-                          position: "absolute",
-                          top: 25,
-                          right: -90,
-                          zIndex: 999,
-                          gap: 15,
+                          paddingLeft: 10,
+                          alignItems: "flex-start",
+                          color: "white",
                         }}
                       >
-                        <button
-                          onClick={() => setSelectedCommentId(comment._id)}
+                        <p
                           style={{
-                            width: "100%",
-                            height: 25,
-                            border: "none",
-                            background: "#282828",
-                            paddingTop: "10px",
-                            paddingLeft: 20,
-                            cursor: "pointer",
-                            color: "white",
-                            display: "flex",
-                            textAlign: "center",
-                            gap: 15,
                             fontSize: 14,
                             fontWeight: "500",
-                          }}
-                        >
-                          {" "}
-                          <MdOutlineEdit size={20} />
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() => setConfirmDeletion(comment._id)}
-                          style={{
-                            width: 100,
-                            height: 25,
-                            paddingLeft: 7,
-                            background: "#282828",
-                            cursor: "pointer",
-                            textAlign: "center",
-
-                            border: "none",
+                            marginTop: -10,
+                            textDecoration: "none",
                             color: "white",
-                            display: "flex",
-                            gap: 15,
-                            fontSize: 14,
-                            fontWeight: "500",
                           }}
                         >
-                          {" "}
-                          <RiDeleteBin6Line size={20} />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-
-                    {/* edition of particular comment */}
-
-                    {/* confirm deletion */}
-
-                    {confirmDeletion && (
-                      <div
-                        style={{
-                          position: "fixed",
-                          top: "50%",
-                          left: "50%",
-                          transform: "translate(-50%, -50%)",
-                          width: 260,
-                          height: 170,
-                          background: "#1f1f1f",
-                          zIndex: 1002,
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          borderRadius: 15,
-                        }}
-                      >
-                        <div
-                          style={{
-                            textAlign: "start",
-                            width: "100%",
-                            marginTop: 10,
-                            marginLeft: 30,
-                          }}
-                        >
-                          <h5
+                          {"@"}
+                          {comment?.owner?.username}{" "}
+                          <span
                             style={{
-                              fontSize: 15,
-                              fontWeight: "500",
-                              color: "#ffffff",
-                            }}
-                          >
-                            Delete comment
-                          </h5>
-                          <h6
-                            style={{
-                              color: "#ffffff",
-                              marginBottom: 20,
                               fontSize: 12,
-                              color: "#10101",
                               fontWeight: "400",
-                              marginTop: -3,
+                              marginTop: -10,
+                              textDecoration: "none",
+                              color: "#aaaaaa",
                             }}
                           >
-                            Delete your comment permanently
-                          </h6>
-                        </div>
-                        <div
+                            {formatDistanceToNow(new Date(comment?.createdAt))}{" "}
+                            ago
+                          </span>
+                        </p>
+
+                        <p
                           style={{
+                            fontSize: 14,
+                            fontWeight: "500",
+                            marginTop: 0,
+                            width: "95%",
+                            textDecoration: "none",
+                            color: "#fff",
+                          }}
+                        >
+                          {comment?.content}
+                        </p>
+
+                        {/* toggle comment like */}
+
+                        <div style={{ display: "flex", paddingTop: 7 }}>
+                          <button
+                            onClick={() => handleToggleLike(comment._id)}
+                            style={{
+                              cursor: "pointer",
+                              background: "#272727",
+                              padding: 4,
+                              width: 32,
+                              height: 32,
+                              color: "white",
+                              borderRadius: "50%",
+                            }}
+                          >
+                            {commentLikeStatus &&
+                              (commentLikeStatus[comment._id] &&
+                              commentLikeStatus[comment._id].liked ? (
+                                <BiSolidLike size={22} />
+                              ) : (
+                                <BiLike size={22} />
+                              ))}
+                          </button>
+
+                          <span
+                            style={{
+                              fontSize: 10,
+                              display: "flex",
+                              paddingTop: 4,
+                              marginRight: 4,
+                              color: "#AAAAAA",
+                              fontWeight: "500",
+                              height: 30,
+                            }}
+                          >
+                            {/* {commentLikesCount && commentLikesCount[comment._id]} */}
+                          </span>
+                          <button
+                            onClick={() => handleToggleDislike(comment._id)}
+                            style={{
+                              cursor: "pointer",
+                              background: "#272727",
+                              padding: 3,
+                              width: 32,
+                              height: 32,
+                              color: "white",
+                              borderRadius: "50%",
+                            }}
+                          >
+                            {commentDislikeStatus &&
+                              (commentDislikeStatus[comment._id] &&
+                              commentDislikeStatus[comment._id].disliked ? (
+                                <BiSolidDislike size={22} />
+                              ) : (
+                                <BiDislike size={22} />
+                              ))}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* comment edition */}
+                    <div
+                      style={{
+                        display: "flex",
+                        position: "absolute",
+                        right: 10,
+                        top: 5,
+                      }}
+                      onClick={() => handleToggleCommentEdition(comment)}
+                    >
+                      <HiOutlineDotsVertical
+                        id="editDeleteButtons" // Add the id here
+                        //  use this if using other than jsx tag like this use fo\r ******** HiOutlineDotsVertical******
+                        // onClick={(event) => {
+                        //   const commentId =
+                        //     event.currentTarget.getAttribute("data-comment-id");
+                        //   const ownerId =
+                        //     event.currentTarget.getAttribute("data-owner-id");
+
+                        //   if (commentId && ownerId) {
+                        //     // console.log("Clicked CommentId:", commentId);
+                        //     // console.log("Clicked OwnerId:", ownerId);
+                        //     handleToggleCommentEdition(commentId, ownerId);
+                        //   }
+                        // }}
+                        // data-comment-id={comment._id}
+                        // data-owner-id={comment.owner._id}
+                        style={{ cursor: "pointer" }}
+                        size={20}
+                      />
+
+                      {/* edit or delete comment options */}
+                      {updateDeleteComment[comment._id] && (
+                        <div
+                          id="editDeleteButtons"
+                          style={{
+                            borderRadius: 15,
+                            width: 120,
+                            height: 90,
+                            background: "#282828",
                             display: "flex",
-                            justifyContent: "flex-end",
-                            width: "100%",
-                            marginRight: 20,
-                            fontSize: 16,
-                            fontWeight: "bold",
-                            marginBottom: 20,
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            position: "absolute",
+                            top: 25,
+                            right: -90,
+                            zIndex: 999,
+                            gap: 15,
                           }}
                         >
                           <button
-                            onClick={() => setConfirmDeletion(null)}
+                            onClick={() => setSelectedCommentId(comment._id)}
                             style={{
-                              background: "none",
-                              color: "rgb(62,166,255)",
+                              width: "100%",
+                              height: 25,
+                              border: "none",
+                              background: "#282828",
+                              paddingTop: "10px",
+                              paddingLeft: 20,
+                              cursor: "pointer",
+                              color: "white",
+                              display: "flex",
+                              textAlign: "center",
+                              gap: 15,
                               fontSize: 14,
                               fontWeight: "500",
-                              cursor: "pointer",
-                              marginRight: 10,
-                              border: "none",
                             }}
                           >
-                            Cancel
+                            {" "}
+                            <MdOutlineEdit size={20} />
+                            Edit
                           </button>
+
                           <button
-                            onClick={(e) =>
-                              handleDeleteComment(e, confirmDeletion)
-                            }
+                            onClick={() => setConfirmDeletion(comment._id)}
                             style={{
-                              background: "none",
-                              color: "rgb(62,166,255)",
+                              width: 100,
+                              height: 25,
+                              paddingLeft: 7,
+                              background: "#282828",
+                              cursor: "pointer",
+                              textAlign: "center",
+
+                              border: "none",
+                              color: "white",
+                              display: "flex",
+                              gap: 15,
                               fontSize: 14,
                               fontWeight: "500",
-                              cursor: "pointer",
-                              border: "none",
                             }}
                           >
+                            {" "}
+                            <RiDeleteBin6Line size={20} />
                             Delete
                           </button>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* report comment options */}
+                      {/* edition of particular comment */}
 
-                    {reportComment[comment._id] && (
-                      <div
-                        style={{
-                          borderRadius: 15,
-                          width: 140,
-                          height: 50,
-                          background: "#282828",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          position: "absolute",
-                          top: 25,
-                          right: -90,
-                          zIndex: 999,
-                          gap: 15,
-                        }}
-                      >
-                        <button
+                      {/* confirm deletion */}
+
+                      {confirmDeletion && (
+                        <div
                           style={{
-                            height: 25,
-                            border: "none",
-                            background: "#282828",
-                            paddingTop: 4,
-                            paddingLeft: 10,
-                            cursor: "pointer",
-                            color: "white",
+                            position: "fixed",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            width: 260,
+                            height: 170,
+                            background: "#1f1f1f",
+                            zIndex: 1002,
                             display: "flex",
-                            textAlign: "center",
-                            gap: 15,
-                            fontSize: 14,
-                            fontWeight: "500",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            borderRadius: 15,
                           }}
                         >
-                          {" "}
-                          <MdOutlineOutlinedFlag size={20} />
-                          Report
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                 </div>
+                          <div
+                            style={{
+                              textAlign: "start",
+                              width: "100%",
+                              marginTop: 10,
+                              marginLeft: 30,
+                            }}
+                          >
+                            <h5
+                              style={{
+                                fontSize: 15,
+                                fontWeight: "500",
+                                color: "#ffffff",
+                              }}
+                            >
+                              Delete comment
+                            </h5>
+                            <h6
+                              style={{
+                                color: "#ffffff",
+                                marginBottom: 20,
+                                fontSize: 12,
+                                color: "#10101",
+                                fontWeight: "400",
+                                marginTop: -3,
+                              }}
+                            >
+                              Delete your comment permanently
+                            </h6>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                              width: "100%",
+                              marginRight: 20,
+                              fontSize: 16,
+                              fontWeight: "bold",
+                              marginBottom: 20,
+                            }}
+                          >
+                            <button
+                              onClick={() => setConfirmDeletion(null)}
+                              style={{
+                                background: "none",
+                                color: "rgb(62,166,255)",
+                                fontSize: 14,
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                marginRight: 10,
+                                border: "none",
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={(e) =>
+                                handleDeleteComment(e, confirmDeletion)
+                              }
+                              style={{
+                                background: "none",
+                                color: "rgb(62,166,255)",
+                                fontSize: 14,
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                border: "none",
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
-                 <div
-                        style={{
-                          flex: 1,
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        {deleteLoading[comment._id] && (
+                      {/* report comment options */}
+
+                      {reportComment[comment._id] && (
+                        <div
+                          style={{
+                            borderRadius: 15,
+                            width: 140,
+                            height: 50,
+                            background: "#282828",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            position: "absolute",
+                            top: 25,
+                            right: -90,
+                            zIndex: 999,
+                            gap: 15,
+                          }}
+                        >
+                          <button
+                            style={{
+                              height: 25,
+                              border: "none",
+                              background: "#282828",
+                              paddingTop: 4,
+                              paddingLeft: 10,
+                              cursor: "pointer",
+                              color: "white",
+                              display: "flex",
+                              textAlign: "center",
+                              gap: 15,
+                              fontSize: 14,
+                              fontWeight: "500",
+                            }}
+                          >
+                            {" "}
+                            <MdOutlineOutlinedFlag size={20} />
+                            Report
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {deleteLoading[comment._id] && (
                       <div
                         style={{
                           flex: 1,
@@ -1091,19 +1189,14 @@ const Comments = () => {
                              `}
                         </style>
                       </div>
-                   )}
-                      </div>
-                  
-
+                    )}
+                  </div>
                 </div>
-              )
-              }
+              )}
             </div>
           );
         })}
       </div>
-
-      
     </div>
   );
 };

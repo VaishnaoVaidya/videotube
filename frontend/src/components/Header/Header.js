@@ -20,24 +20,28 @@ const Header = () => {
   const host = "http://localhost:8000/api/v1";
 
   const navigate = useNavigate();
-  const {signIn ,setSignIn} = useContext(UserContext);
+  const { signIn, setSignIn } = useContext(UserContext);
   const [userDetails, setUserDetails] = useState(false);
   const [refreshToken, setRefreshToken] = useState("");
-  const {sidebar, setSidebar} = useContext(UserContext)
-  const {userProfile, setUserProfile} = useContext(UserContext)
+  const [subscriptions, setSubscriptions] = useState([]);
+  const { sidebar, setSidebar } = useContext(UserContext);
+  const { userProfile, setUserProfile } = useContext(UserContext);
+  // console.log("userprofileHeaders : " + JSON.stringify(userProfile));
+  // console.log("userProfile : " + userProfile);
+  // const subscriberId = userProfile._id
 
   
+
   useEffect(() => {
     const fetchUser = async () => {
-      try { 
+      try {
         // Check if there's a stored access token in localStorage
         const accessToken = localStorage.getItem("accessToken");
         console.log("accessToken: " + accessToken);
-        const response = await axios.get(`${host}/users/current-user`, 
-        {
+        const response = await axios.get(`${host}/users/current-user`, {
           headers: {
-            Authorization: `Bearer ${ accessToken }`,
-          }
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
 
         console.log("UserProfile", response.data.data.user[0].email);
@@ -46,11 +50,11 @@ const Header = () => {
         if (response.data.success) {
           setSignIn(true);
           setUserProfile(response.data.data.user[0]);
-          console.log(userProfile.fullName);
+          console.log("userProfile updated", response.data.data.user);
         } else if (response.data.status === 401) {
           // Access token expired; try refreshing it
           console.log("Access token expire");
-          setRefreshToken(response.data.refreshToken)
+          setRefreshToken(response.data.refreshToken);
           await refreshAccessToken();
         }
       } catch (error) {
@@ -62,11 +66,36 @@ const Header = () => {
     fetchUser();
   }, []);
 
+  //fetch subscriptions
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+   
+    const subscriberId = userProfile._id
+
+    // const {_id} = userProfile
+    // console.log("subscriberId : " + _id);
+    // const subscriberId = _id
+
+    const fetchSubscriptions = async () => {
+
+      
+
+      const response = await axios.get(
+        `http://localhost:8000/api/v1/subscriptions/u/${subscriberId}`,
+        {
+          headers: { Authorization: "Bearer " + accessToken },
+        }
+      );
+    
+      console.log("subscriptions of headers", response.data.data);
+      setSubscriptions(response.data.data);
+    };
+    fetchSubscriptions();
+  }, [userProfile]);
+
   //toDo: refresh token if acces token expire
   const refreshAccessToken = async () => {
     try {
-      
-
       const refreshResponse = await axios.post(
         `${host}/users/refresh-token`,
         { refreshToken },
@@ -106,8 +135,7 @@ const Header = () => {
 
 
   return (
-    <div onClick={(e) => userDetails === true && setUserDetails(false)}
-    >
+    <div onClick={(e) => userDetails === true && setUserDetails(false)}>
       <div
         style={{
           height: "56px",
@@ -122,7 +150,7 @@ const Header = () => {
           backgroundColor: "#000",
           color: "#fff",
           paddingInline: 16,
-          zIndex: 1000
+          zIndex: 1000,
         }}
       >
         {/* Start Section */}
@@ -142,6 +170,7 @@ const Header = () => {
           <p
             style={{
               display: "flex",
+              gap: 5,
               flexDirection: "row",
               justifyContent: "flex-start",
               alignItems: "center",
@@ -152,8 +181,8 @@ const Header = () => {
             }}
           >
             <img
-              src={"images/videotube.png"}
-              style={{ height: 35, width: 43, marginTop: 3, cursor: "pointer" }}
+              src={"https://as2.ftcdn.net/v2/jpg/02/55/94/55/1000_F_255945532_gXYb4gPaatBY39i9KIte3K38KH3lJYIq.jpg"}
+              style={{ height: 32, width: 43, marginTop: 3, cursor: "pointer", borderRadius: 10 }}
               alt=""
             />
             VIDEOTUBE
@@ -245,19 +274,22 @@ const Header = () => {
             fontWeight: "600",
           }}
         >
-          
-          
           {signIn ? (
             userProfile && (
               <>
-              <Link style={{textDecoration: "none", color: "white"}} to={`/channel/upload`}><MdOutlineVideoCall
-            style={{ padding: 8, cursor: "pointer" }}
-            size={30}
-          /></Link>
-              <IoMdNotificationsOutline
-            style={{ padding: 8, cursor: "pointer" }}
-            size={30}
-          />
+                <Link
+                  style={{ textDecoration: "none", color: "white" }}
+                  to={`/channel/upload`}
+                >
+                  <MdOutlineVideoCall
+                    style={{ padding: 8, cursor: "pointer" }}
+                    size={30}
+                  />
+                </Link>
+                <IoMdNotificationsOutline
+                  style={{ padding: 8, cursor: "pointer" }}
+                  size={30}
+                />
                 <img
                   onClick={handleUserDetails}
                   src={userProfile?.avatar || "images/unknown.png"}
@@ -270,43 +302,51 @@ const Header = () => {
                   }}
                   alt={""}
                 />
-                </>
+              </>
             )
           ) : (
             <>
-            <BsThreeDotsVertical onClick={handleUserDetails} style={{paddingRight: 13, cursor: "pointer"}}/>
-            <Link to="/signin"
-            style={{
-              textDecoration: "none",
-            }}
-            >
-              <p
+              <BsThreeDotsVertical
+                onClick={handleUserDetails}
+                style={{ paddingRight: 13, cursor: "pointer" }}
+              />
+              <Link
+                to="/signin"
                 style={{
-                  border: "1px solid gray",
-                  paddingInline: 15,
-                  display: "flex",
-                  borderRadius: "30px",
-                  fontSize: 14,
-                  justifyContent: "center",
-                  alignItems: "center",
                   textDecoration: "none",
-                  color: "#4f8ed4",
                 }}
               >
-                <FaRegUserCircle
-                  style={{ padding: 8, paddingInline: 4 }}
-                  size={20}
-                />{" "}
-                SignIn
-              </p>
-            </Link>
+                <p
+                  style={{
+                    border: "1px solid gray",
+                    paddingInline: 15,
+                    display: "flex",
+                    borderRadius: "30px",
+                    fontSize: 14,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textDecoration: "none",
+                    color: "#4f8ed4",
+                  }}
+                >
+                  <FaRegUserCircle
+                    style={{ padding: 8, paddingInline: 4 }}
+                    size={20}
+                  />{" "}
+                  SignIn
+                </p>
+              </Link>
             </>
           )}
 
           <>
             {/* // toggle user details */}
 
-            <UserSettings userDetails={userDetails} userProfile={userProfile} handleUserDetails={handleUserDetails} />
+            <UserSettings
+              userDetails={userDetails}
+              userProfile={userProfile}
+              handleUserDetails={handleUserDetails}
+            />
           </>
         </div>
       </div>
@@ -321,13 +361,20 @@ const Header = () => {
               height: "100vh",
               position: "absolute",
               marginTop: 56,
-              backgroundColor: "rgb(0, 0, 0)",
               color: "#fff",
               padding: "20px",
               overflowY: "hidden",
               position: "fixed",
-              zIndex: 1000
-              // overflowY: "scroll",
+              zIndex: 1000,
+              overflowY: "auto",
+              scrollbarColor: "black",
+              scrollbarWidth: "thin",
+              backgroundColor: "rgb(0, 0, 0)",
+              // WebkitOverflowScrolling: "touch", // Enable smooth scrolling in WebKit browsers
+              // '&::-webkit-scrollbar': {
+              //   backgroundColor: "rgb(0, 0, 0)",
+                // Set background color of the scrollbar
+              // }
             }}
           >
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -466,6 +513,43 @@ const Header = () => {
                   Subscriptions
                 </li>
               </Link>
+
+              <div
+                style={{
+                  marginBottom: "10px",
+                  display: "flex",
+                  fontSize: 18,
+                  padding: 10,
+                  borderRadius: "10px",
+                  flexDirection: "column", // Removed duplicate 'display: "flex"'
+                  justifyContent: "flex-start",
+                }}
+              >
+                {subscriptions.map((subscription, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      marginTop: -25,
+                    }}
+                  >
+                    {" "}
+                    {/* Changed flexDirection to alignItems */}
+                    <img
+                      src={subscription.subscriber.avatar}
+                      style={{ width: 30, height: 30, borderRadius: "50%" }}
+                      alt=""
+                    />
+                    <h6>
+                      {subscription.subscriber.fullName ||
+                        subscription.subscriber.username}
+                    </h6>
+                  </div>
+                ))}
+              </div>
+
             </ul>
           </section>
         </>
@@ -479,7 +563,7 @@ const Header = () => {
               marginTop: 56, // Adjust the padding as needed
               backgroundColor: "rgb(0, 0, 0)", // Sidebar background color
               color: "#fff", // Text color
-              zIndex: 1000
+              zIndex: 1000,
             }}
           >
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -631,6 +715,7 @@ const Header = () => {
                 >
                   <></>
                   Subscriptions
+                  {}
                 </li>
               </Link>
             </ul>

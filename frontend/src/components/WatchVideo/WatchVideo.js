@@ -2,11 +2,11 @@ import axios from "axios";
 import React, { useMemo, useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import UserContext from "../../context/UserContext";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, sub } from "date-fns";
 import { AiOutlineLike } from "react-icons/ai";
 import { BiDislike, BiLike, BiSolidDislike, BiSolidLike } from "react-icons/bi";
 import { PiShareFat } from "react-icons/pi";
-import { MdPlaylistAdd } from "react-icons/md";
+import { MdNotificationsActive, MdPlaylistAdd } from "react-icons/md";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import Comments from "../Comments/Comments";
 
@@ -15,11 +15,13 @@ const WatchVideoDetails = () => {
 
   const { videoId } = useParams();
   const host = "http://localhost:8000/api/v1";
-  console.log("searchId: " + videoId);
+  // console.log("searchId: " + videoId);
   const [videoDetails, setVideoDetails] = useState({});
+  const [subscribe, setSubscribe] = useState(null);
+  const [subscriberData, setSubscriberData] = useState([]);
   const { sidebar } = useContext(UserContext);
   const { userProfile } = useContext(UserContext);
-  console.log("userProfile._id "+ ": " + userProfile._id);
+  // console.log("userProfile._id "+ ": " + userProfile._id);
   const [videos, setVideos] = useState([]);
   const [videoLikeStatus, setVideoLikeStatus] = useState(null);
   const [videoLikesCount, setVideoLikesCount] = useState([]);
@@ -27,8 +29,30 @@ const WatchVideoDetails = () => {
 
   const [likesArray, setLikesArray] = useState([]);
 
-  const [like, setLike] = useState({});
-  const [dislike, setDislike] = useState({});
+  const [views, setViews] = useState(videos.views);
+
+  const trackView = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+
+      const response = await axios.post(
+        `${host}/views/${videoId}`,
+
+        { videoId: videoId },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        console.log("response.data of views: ", response.data);
+        setViews(response.data.views);
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,24 +68,24 @@ const WatchVideoDetails = () => {
         if (!accessToken) {
           alert("please login or signUp to grant access");
         }
-        // console.log('Response Data Type:', response.data.data);
+        // // console.log('Response Data Type:', response.data.data);
 
         // Check the type of response data
         if (response.data && Array.isArray(response.data.data)) {
           setVideos(response.data.data);
-          console.log("Home", response.data.data);
+          // console.log("Home", response.data.data);
         } else {
-          console.error("Invalid data format received");
+          // console.error("Invalid data format received");
         }
       } catch (error) {
-        console.error(error.message);
+        // console.error(error.message);
       }
     };
     fetchData();
   }, []);
   // const {url} = useParams()
   // const videoDetailsId = extractvideoDetailsId(url)
-  // console.log("searchId: " + videoDetailsId);
+  // // console.log("searchId: " + videoDetailsId);
 
   // function extractvideoDetailsId(url) {
   //     const match = url.match(/[?&]v=({[^&]+)/)
@@ -72,132 +96,245 @@ const WatchVideoDetails = () => {
     const fetchVideoDetails = async () => {
       try {
         const accessToken = window.localStorage.getItem("accessToken");
+        const subscriberId = userProfile._id;
         const response = await axios.get(`${host}/videos/${videoId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-  
-        const likesResponse = await axios.get(`${host}/likes/video/${videoId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          },
-        });
-  
+
+        const likesResponse = await axios.get(
+          `${host}/likes/video/${videoId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
         const userId = userProfile._id;
-        const hasLiked = await likesResponse.data.data.some((like) => like.likedBy === userId);
-        const hasDisliked = await likesResponse.data.data.some((like) => like.dislikedBy === userId);
+        const hasLiked = await likesResponse.data.data.some(
+          (like) => like.likedBy === userId
+        );
+        const hasDisliked = await likesResponse.data.data.some(
+          (like) => like.dislikedBy === userId
+        );
         const likeDislikeArray = likesResponse.data.data;
-        const likesCount = likeDislikeArray.filter((like) => like.likedBy).length
-  
+        const likesCount = likeDislikeArray.filter(
+          (like) => like.likedBy
+        ).length;
+        console.log("watchVideo", response.data.data);
         // Update the state after fetching the required data
         setVideoLikeStatus(hasLiked);
-        setVideoDislikeStatus(hasDisliked)
+        setVideoDislikeStatus(hasDisliked);
         setVideoLikesCount(likesCount);
         setVideoDetails(response.data.data);
 
         setLikesArray(likeDislikeArray);
 
-        console.log("Video details fetched:", response.data.data);
-        console.log("Likes fetched:", likesResponse.data.data);
-        console.log("User profile ID:", userId);
-        console.log("Has liked:", hasLiked);
-        console.log("Likes count:", likesCount);
+        try {
+          const subscribeResponse = await axios.get(
+            `${host}/subscriptions/c/${videoDetails.owner._id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+          console.log("subscribeResponse:", subscribeResponse?.data.data);
+          if (subscribeResponse?.data.data) {
+              console.log("Channel 1:", subscribeResponse.data.data[0]?.channel._id);
+              console.log("Channel 2:", subscribeResponse.data.data[1]?.channel._id);
+          } else {
+              console.error("Error: Invalid subscribeResponse or missing data.");
+          }
+         // Assuming setSubscriberData updates the state with subscribeResponse.data
+setSubscriberData(subscribeResponse.data.data);
+
+// Now, wait for the state to update and then perform your find operation
+console.log("subscriberData: ", subscribeResponse.data.data); // Logging the updated data
+if (typeof subscribeResponse.data === 'object' && subscribeResponse.data !== null) {
+  // Assuming subscriber data is nested under some property, adjust accordingly
+  const subscriberData = subscribeResponse.data.data;
+  
+  // Check if subscriberData is an array before attempting to find a subscriber
+  if (Array.isArray(subscriberData)) {
+      const foundSubscriber = subscriberData.find((subscriber) => {
+          return subscriber.subscriber._id === userProfile._id;
+      });
+      
+      if (foundSubscriber) {
+        setSubscribe(true)
+          console.log("Subscriber found:", foundSubscriber);
+          // Do something with foundSubscriber
+      } else {
+          console.log("Subscriber not found.");
+          // Handle case when subscriber is not found
+      }
+  } else {
+      console.error("Subscriber data is not an array.");
+      // Handle case when subscriber data is not an array
+  }
+} else {
+  console.error("Invalid subscription data.");
+  // Handle case when subscription data is not in the expected format
+}
+
+        } catch (error) {
+          console.error("Error fetching subscription data:", error);
+        }
+
+        // // console.log("Video details fetched:", response.data.data);
+        // // console.log("Likes fetched:", likesResponse.data.data);
+        // // console.log("User profile ID:", userId);
+        // // console.log("Has liked:", hasLiked);
+        // // console.log("Likes count:", likesCount);
       } catch (error) {
         console.log("Error fetching video details", error.message);
       }
     };
-    
+
     fetchVideoDetails();
-  }, [videoId, userProfile, videoLikeStatus, videoLikesCount, videoDislikeStatus]);
-  
+  }, [
+    videoId,
+    userProfile,
+    videoLikeStatus,
+    videoLikesCount,
+    videoDislikeStatus,
+  ]);
 
   // Correct
-useEffect(() => {
-  console.log('Component rendered with videoLikeStatus:', videoLikeStatus);
-}, [videoLikeStatus,]);
+  useEffect(() => {
+    // console.log('Component rendered with videoLikeStatus:', videoLikeStatus);
+  }, [videoLikeStatus]);
 
+  const memoizedLikesCount = useMemo(() => videoLikesCount, [videoLikesCount]);
 
-const memoizedLikesCount = useMemo(() => videoLikesCount, [videoLikesCount]);
-
-
-const handleToggleLike = async () => {
-  const { _id: videoId } = videoDetails;
-  const userId = userProfile._id;
-  console.log("handleToggleLike userId: " + userId);
-
-  const accessToken = localStorage.getItem("accessToken");
-
-  try {
-    // Send the like/dislike status to the server
-    const response = await axios.post(
-      `${host}/likes/toggle/video/${videoId}`,
-      {
-        likedBy: userId ,
-        dislikedBy: null, // Reset dislike when liking
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const { liked, likeCount } = response.data.data;
-
-    // Update state with new like status and count
-    setVideoLikeStatus(liked);
-    setVideoLikesCount(likeCount);
-    // setVideoLikesCount((prevCount) => prevCount + 1);
-
-    console.log("video like response: ",response.data);
-    console.log("Video liked:", response.data.data.liked);
-    // console.log("Video likes count:", response.data.data.likeCount);
-
-  } catch (error) {
-    console.log("Toggle Video Like error", error.message);
-  }
-};
-
-
-
-
-  const handleToggleDislike= async () => {
+  const handleToggleLike = async () => {
     const { _id: videoId } = videoDetails;
-  const userId = userProfile._id;
-  console.log("handleToggleLike userId: " + userId);
+    const userId = userProfile._id;
+    // console.log("handleToggleLike userId: " + userId);
 
-  const accessToken = localStorage.getItem("accessToken");
+    const accessToken = localStorage.getItem("accessToken");
 
-  try {
-    // Send the like/dislike status to the server
-    const response = await axios.post(
-      `${host}/likes/toggle/video/${videoId}`,
-      {
-        dislikedBy: userId,
-        likedBy: null, // Reset dislike when liking
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+    try {
+      // Send the like/dislike status to the server
+      const response = await axios.post(
+        `${host}/likes/toggle/video/${videoId}`,
+        {
+          likedBy: userId,
+          dislikedBy: null, // Reset dislike when liking
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-   
-    const { disliked, likeCount } = response.data.data;
+      const { liked, likeCount } = response.data.data;
 
-    setVideoDislikeStatus(disliked);
-    // setVideoLikesCount((prevCount) => Math.max(0, prevCount - 1));
+      // Update state with new like status and count
+      setVideoLikeStatus(liked);
+      setVideoLikesCount(likeCount);
+      // setVideoLikesCount((prevCount) => prevCount + 1);
 
-    console.log("video dislike response: ",response.data);
-    console.log("Video disliked:", response.data.data.liked);
-    // console.log("Video disliked count:", response.data.data.likeCount);
+      // console.log("video like response: ",response.data);
+      // console.log("Video liked:", response.data.data.liked);
+      // // console.log("Video likes count:", response.data.data.likeCount);
+    } catch (error) {
+      // console.log("Toggle Video Like error", error.message);
+    }
+  };
 
-  } catch (error) {
-    console.log("Toggle Video Like error", error.message);
-  }
-  }
+  const addToWatchHistory = async (videoId) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      // Send a POST request to your backend API to add the video to the watch history
+      const response = await axios.post(
+        `${host}/users/addWatchHistory/${videoId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+  
+      console.log('Video added to watch history', response.data);
+    } catch (error) {
+      console.error('Error adding video to watch history:', error);
+    }
+  };
+  
+
+  const handleSubscribeChannel = async () => {
+    const {
+      owner: { _id: channelId },
+    } = videoDetails;
+
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      const response = await axios.post(
+        `${host}/subscriptions/c/${channelId}`,
+        null, // Passing null or an empty object as the second argument because you're not sending any data in the request body
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      console.log("subscribing channel", response.data.data);
+
+      setSubscribe(response.data.data.isSubscribed);
+      // setVideoLikesCount((prevCount) => Math.max(0, prevCount - 1));
+
+      // console.log("video dislike response: ",response.data);
+      // console.log("Video disliked:", response.data.data.liked);
+      // // console.log("Video disliked count:", response.data.data.likeCount);
+    } catch (error) {
+      console.log("Toggle Subscription Like error", error.message);
+      console.log("channel Id:", channelId);
+    }
+  };
+
+  const handleToggleDislike = async () => {
+    const { _id: videoId } = videoDetails;
+    const userId = userProfile._id;
+    // console.log("handleToggleLike userId: " + userId);
+
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      // Send the like/dislike status to the server
+      const response = await axios.post(
+        `${host}/likes/toggle/video/${videoId}`,
+        {
+          dislikedBy: userId,
+          likedBy: null, // Reset dislike when liking
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const { disliked, likeCount } = response.data.data;
+
+      setVideoDislikeStatus(disliked);
+      // setVideoLikesCount((prevCount) => Math.max(0, prevCount - 1));
+
+      // console.log("video dislike response: ",response.data);
+      // console.log("Video disliked:", response.data.data.liked);
+      // // console.log("Video disliked count:", response.data.data.likeCount);
+    } catch (error) {
+      // console.log("Toggle Video Like error", error.message);
+    }
+  };
 
   return (
     <>
@@ -206,7 +343,7 @@ const handleToggleLike = async () => {
           style={{
             marginInline: 110,
             paddingTop: 56,
-            background: "rgb(15, 15, 15)",
+            background: "rgb(0, 0, 0)",
             display: "flex",
             flexDirection: "row",
           }}
@@ -218,7 +355,7 @@ const handleToggleLike = async () => {
               width: "70%",
               justifyContent: "flex-start",
               margin: 5,
-              background: "rgb(15, 15, 15)",
+              background: "rgb(0, 0, 0)",
               gap: 15,
             }}
           >
@@ -235,12 +372,14 @@ const handleToggleLike = async () => {
                 }}
               >
                 <video
-                  style={{
+                    onClick={() => addToWatchHistory(videoDetails._id)}       
+                    style={{
                     width: "100%",
                     height: "80vh",
                     borderRadius: 15,
                     position: "static",
                   }}
+                  onPlay={trackView}
                   src={videoDetails.videoFile}
                   controls
                 ></video>
@@ -345,7 +484,7 @@ const handleToggleLike = async () => {
                             textDecoration: "none",
                           }}
                         >
-                          {" K"} subscribers
+                          {subscriberData.length + " K"} subscribers
                         </p>
                       </div>
 
@@ -358,7 +497,7 @@ const handleToggleLike = async () => {
                           alignItems: "center",
                         }}
                       >
-                        <button
+                        {/* <button
                           style={{
                             border: "1px solid #999",
                             background: "#000",
@@ -376,63 +515,74 @@ const handleToggleLike = async () => {
                           }}
                         >
                           Join
-                        </button>
-                        <button
-                          style={{
-                            border: "1px solid #999",
-                            background: "#000",
-                            cursor: "pointer",
-                            paddingInline: 4,
-                            paddingBlock: 10,
-                            width: 100,
-                            height: 36,
-                            backgroundColor: "white",
-                            color: "black",
-                            borderRadius: 25,
-                            fontSize: 14,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Subscribe
-                        </button>
+                        </button> */}
+                      
                       </div>
                     </div>
                   </div>
 
                   {/* Buttons functionality */}
-                  <div style={{ display: "flex", gap: 15, marginTop: -12 }}>
+                  <div style={{ display: "flex", gap: 15, marginTop: -5 }}>
+                  <button
+                          onClick={handleSubscribeChannel}
+                          style={{
+                            background:
+                            subscribe === true ? "rgb(39, 39, 39)" : "#fff",
+                            color: subscribe === true ? "#fff" : "#000",
+                            border: "1px solid #999",
+                            cursor: "pointer",
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: "5px",
+                            width: "auto",
+                            height: 35,
+                            paddingInline: "10px",
+                            paddingBlock: "10px",
+                           
+                            borderRadius: 25,
+                            fontSize: 14,
+                            fontWeight: "bold",
+                          }}
+                        >
+                         { subscribe === true ? (
+            <>
+                <MdNotificationsActive />
+                <span>subscribed</span>
+            </>
+        ):(         <span>subscribe</span>
+)}
+
+                        </button>
                     <div>
                       <button
-                       onClick={() => handleToggleLike(videoDetails)}
+                        onClick={() => handleToggleLike(videoDetails)}
                         style={{
                           border: "1px solid #999",
                           background: "#272727",
                           display: "inline-flex",
                           paddingTop: 8,
-                          gap: 5,
+                          gap: 10,
                           textAlign: "center",
                           cursor: "pointer",
-
-                          width: 70,
+                          width: "auto",
                           height: 35,
                           color: "white",
+                          paddingInline: 10,
                           borderTopLeftRadius: 25,
                           borderBottomLeftRadius: 25,
                           fontSize: 14,
                           fontWeight: "600",
                         }}
                       >
-                        { 
-                        videoLikeStatus === true ? (
+                        {videoLikeStatus ? (
                           <>
                             <BiSolidLike style={{ paddingLeft: 5 }} size={20} />
-                            { videoLikesCount && (videoLikesCount) } 
+                            {videoLikesCount && videoLikesCount}
                           </>
                         ) : (
                           <>
                             <BiLike style={{ paddingLeft: 5 }} size={20} />
-                            { videoLikesCount && (videoLikesCount)} 
-
+                            {videoLikesCount && videoLikesCount}
                           </>
                         )}
                       </button>
@@ -527,8 +677,19 @@ const handleToggleLike = async () => {
                     background: "#272727",
                     color: "white",
                     gap: 5,
+                    paddingLeft: 5,
                   }}
-                ></div>
+                >
+                  <h4>
+                    {videoDetails.views} views{" "}
+                    <span>
+                      {videoDetails.createdAt &&
+                        formatDistanceToNow(new Date(videoDetails.createdAt)) +
+                          " ago"}
+                    </span>
+                    <p>{videoDetails.description}</p>
+                  </h4>{" "}
+                </div>
                 {/*  Comments on videos */}
                 <Comments />
               </div>
@@ -542,7 +703,7 @@ const handleToggleLike = async () => {
               justifyContent: "flex-start",
               margin: 15,
               width: "30%",
-              background: "rgb(15, 15, 15)",
+              background: "rgb(0, 0, 0)",
               gap: 15,
             }}
           >

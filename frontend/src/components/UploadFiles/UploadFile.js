@@ -25,7 +25,7 @@ const UploadFile = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  console.log("selectedFile:", selectedFile);
+  // console.log("selectedFile:", selectedFile);
   const [selectedThumbnail, setSelectedThumbnail] = useState(null);
 
   const [selectedThumbnailIndex, setSelectedThumbnailIndex] = useState(null);
@@ -406,6 +406,7 @@ const UploadFile = () => {
             </p>
 
             <input
+            disabled={loading === true} 
               style={{
                 display: "none",
               }}
@@ -420,6 +421,7 @@ const UploadFile = () => {
 
             <label
               htmlFor="fileInput"
+              
               style={{
                 marginTop: 20,
                 fontSize: 14,
@@ -498,7 +500,7 @@ const UploadFile = () => {
           >
             {/* Video Details */}
 
-            <forms
+            <form
               style={{
                 width: 550,
                 height: 350,
@@ -879,7 +881,7 @@ const UploadFile = () => {
                   ))}
                 </div>
               </div>
-            </forms>
+            </form>
 
             {/* Selected Video */}
             <div

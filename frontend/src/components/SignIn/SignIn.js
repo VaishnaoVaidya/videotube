@@ -32,6 +32,7 @@ const SignIn = () => {
         console.log(response.data.data.user);
         console.log(response.data.data.accessToken);
         localStorage.setItem('accessToken', response.data.data.accessToken);
+        // localStorage.setItem('userProfile', response.data.data.user);
         navigate("/");
       } else {
         console.error("Authentication failed:", response.data.message);

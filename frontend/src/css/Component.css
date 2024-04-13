@@ -1,0 +1,25 @@
+/* Existing CSS styles */
+
+/* Provided media query for responsiveness */
+@media screen and (max-width: 768px) {
+    /* Adjust styles for smaller screens */
+    .liked-videos-container {
+      margin-left: 0;
+      position: relative;
+      left: 0;
+      top: 56px; /* Adjust based on your layout */
+    }
+    
+    .liked-videos-container aside {
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      width: 100%;
+    }
+    
+    .liked-video-item {
+      width: 90%; /* Adjust based on your preference */
+      margin: 10px;
+    }
+  }
+  
