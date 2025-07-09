@@ -34,14 +34,3 @@ VideoTube is a modern, MERN-stack application that lets users **upload**, **watc
    ```bash
    git clone https://github.com/VaishnaoVaidya/videotube.git
    cd videotube
-# Root directory
-npm install
-
-# Frontend
-cd client
-npm install
-cd ..
-
-# Backend
-cd server
-npm install
