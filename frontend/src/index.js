@@ -17,7 +17,7 @@ import UserContextProvider from './context/UserContextProvider';
 import UploadFile from './components/UploadFiles/UploadFile';
 import HomePage from './components/HomePage/HomePage';
 import YourChannel from './components/YourChannel/YourChannel';
-import Playlists from './components/Playlists/Playlists';
+import Playlists from './components/Playlists/playlists';
 import RandomChannel from './components/RandomChannel/RandomChannel';
 import WatchVideo from './components/WatchVideo/WatchVideo';
 import UserProfileSettings from './components/UserSettings/UserProfileSettings';

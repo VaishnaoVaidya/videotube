@@ -401,10 +401,15 @@ button {
 .auth-button,
 .auth-ghost,
 .pill-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 46px;
   padding: 0 18px;
   border-radius: 999px;
   font-weight: 700;
+  line-height: 1;
+  text-align: center;
 }
 
 .auth-button,
