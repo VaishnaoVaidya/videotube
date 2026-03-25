@@ -71,4 +71,4 @@ app.use((err, req, res, next) => {
 
 //http://localhost:8000/api/v1/users/register
 
-export{ app , io };
+export{ app , io, httpServer  };
