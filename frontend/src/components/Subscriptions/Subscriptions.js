@@ -19,7 +19,7 @@ const Subscriptions = () => {
         }
 
         const response = await axios.get(
-          `http://localhost:8000/api/v1/subscriptions/u/${userProfile._id}`,
+          `https://videotube-backend-5fg2.onrender.com/api/v1/subscriptions/u/${userProfile._id}`,
           {
             headers: { Authorization: `Bearer ${accessToken}` },
           }

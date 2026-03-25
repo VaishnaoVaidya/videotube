@@ -40,7 +40,7 @@ const matchesTopic = (video, topic) => {
 };
 
 const Home = () => {
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
   const location = useLocation();
   const [videos, setVideos] = useState([]);
 

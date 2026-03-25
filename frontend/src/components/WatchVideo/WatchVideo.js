@@ -11,7 +11,7 @@ import VideoCard from "../shared/VideoCard";
 
 const WatchVideoDetails = () => {
   const { videoId } = useParams();
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
   const [videoDetails, setVideoDetails] = useState({});
   const [subscribe, setSubscribe] = useState(null);
   const [subscriberData, setSubscriberData] = useState([]);

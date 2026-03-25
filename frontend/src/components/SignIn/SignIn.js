@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const host = "http://localhost:8000";
+  const host = "https://videotube-backend-5fg2.onrender.com";
   const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

@@ -6,7 +6,7 @@ import EmptyState from "../shared/EmptyState";
 
 const UserProfileSettings = () => {
   const navigate = useNavigate();
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
   const { signIn, userProfile, setUserProfile } = useContext(UserContext);
   const [avatarFile, setAvatarFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);

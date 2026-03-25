@@ -4,7 +4,7 @@ import axios from "axios";
 import EmptyState from "../shared/EmptyState";
 
 const RandomuserData = () => {
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
   const [userData, setUserData] = useState({});
   const { username } = useParams();
 

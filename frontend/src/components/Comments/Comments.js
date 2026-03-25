@@ -16,7 +16,7 @@ const Comments = () => {
 
   const { videoId } = useParams();
   const currentCommentId = useRef(null);
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
 
   const { userProfile } = useContext(UserContext);
   // console.log("userProfile comment :" + JSON.stringify(userProfile._id));

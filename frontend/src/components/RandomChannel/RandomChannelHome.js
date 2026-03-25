@@ -1,7 +1,7 @@
 import React from 'react'
 
 const RandomChannelHome = () => {
-    const host = "http://localhost:8000/api/v1";
+    const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
     const { sidebar } = useContext(UserContext);
     const [userData, setUserData] = useState({});
     const { username } = useParams();

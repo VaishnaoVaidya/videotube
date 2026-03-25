@@ -7,7 +7,7 @@ import EmptyState from "../shared/EmptyState";
 const DEBOUNCE_DELAY = 500;
 
 const WatchedHistory = () => {
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
   const [watchedHistoryVideos, setWatchedHistoryVideos] = useState([]);
   const [debouncedFetchData, setDebouncedFetchData] = useState(null);
 

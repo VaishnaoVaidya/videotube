@@ -14,7 +14,7 @@ import axios from "axios";
 import PageIntro from "../shared/PageIntro";
 
 const UploadFile = () => {
-  const host = "http://localhost:8000/api/v1";
+  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const [thumbnails, setThumbnails] = useState([]);
