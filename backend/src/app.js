@@ -15,7 +15,7 @@ const io = new Server(httpServer);
 
 
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: "https://videotube-wine.vercel.app/", credentials: true }));
 
 app.use(express.json({limit: "9kb"}));
 app.use(express.urlencoded({extended: true, limit: "9kb"}));
@@ -74,5 +74,6 @@ app.use((err, req, res, next) => {
 });
 
 //http://localhost:8000/api/v1/users/register
+//https://videotube-backend-5fg2.onrender.com/api/v1/users/register
 
 export{ app , io, httpServer  };
