@@ -26,6 +26,10 @@ app.get("/", (req, res) => {
     res.send("VideoTube API is running 🚀");
 });
 
+app.get("/debug", (req, res) => {
+  res.send("DEBUG WORKING");
+});
+
 // app.use((req, res, next) => {
 //     res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN);
 //     res.header('Access-Control-Allow-Credentials', true);

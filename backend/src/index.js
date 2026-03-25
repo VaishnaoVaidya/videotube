@@ -7,6 +7,7 @@ import { httpServer } from './app.js';
 dotenv.config({path: './.env'})
 // console.log("ENV: ", env);
 
+const PORT = process.env.PORT || 8000;
 
 connectDB()
 .then(() => {
