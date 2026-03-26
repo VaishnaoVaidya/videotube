@@ -269,7 +269,10 @@ const Header = () => {
 
         <Search />
 
-        <div className="topbar-actions" onClick={(event) => event.stopPropagation()}>
+        <div
+          className={`topbar-actions ${signIn ? "is-signed-in" : "is-guest"}`}
+          onClick={(event) => event.stopPropagation()}
+        >
           {signIn ? (
             <>
               <Link className="icon-button" to="/channel/upload" aria-label="Upload video">
@@ -317,12 +320,14 @@ const Header = () => {
                   <span className="notifications-badge">{unreadNotifications}</span>
                 ) : null}
               </button>
-              <Link className="auth-ghost" to="/signup">
-                Create account
-              </Link>
-              <Link className="auth-button" to="/signin">
-                Sign in
-              </Link>
+              <div className="guest-auth-links">
+                <Link className="auth-ghost" to="/signup">
+                  Create account
+                </Link>
+                <Link className="auth-button" to="/signin">
+                  Sign in
+                </Link>
+              </div>
             </>
           )}
 
