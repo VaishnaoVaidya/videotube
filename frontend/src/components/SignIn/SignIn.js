@@ -1,10 +1,11 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../config/api";
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const host = "https://videotube-backend-5fg2.onrender.com";
+  const host = BASE_URL;
   const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,8 +53,8 @@ const SignIn = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
+    <div className="auth-page px-4 sm:px-6 lg:px-8">
+      <div className="auth-card w-full max-w-xl">
         <p className="page-intro__eyebrow">Welcome back</p>
         <h1 className="auth-card__title">Sign in to VideoTube</h1>
         <p className="auth-card__subtitle">
@@ -85,9 +86,7 @@ const SignIn = () => {
             />
           </div>
 
-          {errorMessage ? (
-            <p style={{ margin: 0, color: "#fb7185" }}>{errorMessage}</p>
-          ) : null}
+          {errorMessage ? <p className="m-0 text-sm text-rose-400">{errorMessage}</p> : null}
 
           <button className="auth-button" type="submit" disabled={loading}>
             {loading ? "Signing in..." : "Continue"}

@@ -1,10 +1,11 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../config/api";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const host = "https://videotube-backend-5fg2.onrender.com";
+  const host = BASE_URL;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -44,8 +45,8 @@ const SignUp = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
+    <div className="auth-page px-4 sm:px-6 lg:px-8">
+      <div className="auth-card w-full max-w-xl">
         <p className="page-intro__eyebrow">Join the platform</p>
         <h1 className="auth-card__title">Create your creator account</h1>
         <p className="auth-card__subtitle">
@@ -89,9 +90,7 @@ const SignUp = () => {
             />
           </div>
 
-          {errorMessage ? (
-            <p style={{ margin: 0, color: "#fb7185" }}>{errorMessage}</p>
-          ) : null}
+          {errorMessage ? <p className="m-0 text-sm text-rose-400">{errorMessage}</p> : null}
 
           <button className="auth-button" type="submit" disabled={loading}>
             {loading ? "Creating account..." : "Create account"}

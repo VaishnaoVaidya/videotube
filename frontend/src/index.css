@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --bg: #07111f;
   --bg-elevated: #0d1728;
@@ -31,6 +35,11 @@
   box-sizing: border-box;
 }
 
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   background:
     radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 28%),
@@ -46,6 +55,13 @@ body {
   font-family: "Segoe UI", "Trebuchet MS", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
 }
 
 a {
@@ -101,6 +117,7 @@ button {
   right: 0;
   z-index: 1100;
   display: grid;
+  grid-template-areas: "brand search actions";
   grid-template-columns: auto minmax(280px, 1fr) auto;
   align-items: center;
   gap: 16px;
@@ -112,6 +129,7 @@ button {
 }
 
 .app-brand {
+  grid-area: brand;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -165,10 +183,12 @@ button {
 }
 
 .search-shell {
+  grid-area: search;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
 }
 
 .search-box {
@@ -289,11 +309,14 @@ button {
 }
 
 .topbar-actions {
+  grid-area: actions;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
   position: relative;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .notifications-trigger {
@@ -658,6 +681,8 @@ button {
   margin: 0 auto;
   display: grid;
   gap: 24px;
+  width: 100%;
+  min-width: 0;
 }
 
 .page-shell--full {
@@ -789,6 +814,7 @@ button {
 .video-card {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .video-card__media {
@@ -834,6 +860,18 @@ button {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 12px;
+  min-width: 0;
+}
+
+.video-card__details,
+.panel,
+.watch-player,
+.upload-preview-card,
+.channel-hero,
+.auth-card,
+.form-stack,
+.form-field {
+  min-width: 0;
 }
 
 .video-card__avatar {
@@ -972,15 +1010,15 @@ button {
 }
 
 .auth-page {
-  min-height: calc(100vh - var(--header-height) - 56px);
+  min-height: calc(100vh - var(--header-height));
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 112px 16px 32px;
 }
 
 .auth-card {
-  width: min(100%, 460px);
+  width: min(100%, 520px);
   padding: 34px;
   border-radius: 30px;
   background:
@@ -1019,6 +1057,7 @@ button {
 .form-field input,
 .form-field textarea {
   width: 100%;
+  min-width: 0;
   border-radius: 16px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);
@@ -1575,13 +1614,25 @@ button {
   }
 
   .app-topbar {
-    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand actions"
+      "search search";
+    grid-template-columns: minmax(0, 1fr) auto;
     height: auto;
+    padding: 12px 18px;
   }
 
-  .topbar-actions,
   .search-shell {
-    justify-content: flex-start;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .topbar-actions {
+    justify-content: flex-end;
   }
 }
 
@@ -1594,7 +1645,32 @@ button {
   }
 
   .app-sidebar {
-    display: none;
+    display: block;
+    width: min(84vw, 300px);
+    transform: translateX(-105%);
+    transition: transform 0.24s ease;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar.is-closed {
+    width: min(84vw, 300px);
+    transform: translateX(-105%);
+  }
+
+  .app-sidebar.is-closed .nav-item,
+  .app-sidebar.is-open .nav-item {
+    justify-content: flex-start;
+    padding-inline: 14px;
+  }
+
+  .app-sidebar.is-closed .nav-item span,
+  .app-sidebar.is-closed .nav-label,
+  .app-sidebar.is-closed .subscription-item__meta {
+    display: block;
   }
 
   .topic-bar {
@@ -1618,6 +1694,18 @@ button {
 
   .video-card--list {
     grid-template-columns: 1fr;
+  }
+
+  .page-intro,
+  .panel,
+  .upload-preview-card,
+  .channel-hero {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .auth-page {
+    padding-top: 104px;
   }
 
   .dashboard-table__head {
@@ -1644,8 +1732,34 @@ button {
     display: none;
   }
 
+  .brand-copy strong {
+    font-size: 0.92rem;
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .search-box {
+    grid-template-columns: 1fr;
+  }
+
+  .search-submit {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 14px;
+    font-size: 0.92rem;
+  }
+
   .auth-card {
     padding: 24px;
+  }
+
+  .auth-button,
+  .auth-ghost,
+  .pill-button,
+  .secondary-button {
+    width: 100%;
   }
 
   .dashboard-table__video {

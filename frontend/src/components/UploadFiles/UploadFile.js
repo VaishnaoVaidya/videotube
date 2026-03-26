@@ -12,9 +12,10 @@ import { IoIosCheckmarkCircleOutline } from "react-icons/io";
 import { HiUpload } from "react-icons/hi";
 import axios from "axios";
 import PageIntro from "../shared/PageIntro";
+import { API_V1_URL } from "../../config/api";
 
 const UploadFile = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const [thumbnails, setThumbnails] = useState([]);

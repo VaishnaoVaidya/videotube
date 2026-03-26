@@ -4,6 +4,7 @@ import UserContext from "../../context/UserContext";
 import PageIntro from "../shared/PageIntro";
 import VideoCard from "../shared/VideoCard";
 import EmptyState from "../shared/EmptyState";
+import { API_V1_URL } from "../../config/api";
 
 const Subscriptions = () => {
   const [subscriptionsVideos, setSubscriptionsVideos] = useState([]);
@@ -19,7 +20,7 @@ const Subscriptions = () => {
         }
 
         const response = await axios.get(
-          `https://videotube-backend-5fg2.onrender.com/api/v1/subscriptions/u/${userProfile._id}`,
+          `${API_V1_URL}/subscriptions/u/${userProfile._id}`,
           {
             headers: { Authorization: `Bearer ${accessToken}` },
           }

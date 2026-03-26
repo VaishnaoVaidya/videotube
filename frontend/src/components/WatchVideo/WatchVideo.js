@@ -8,10 +8,11 @@ import { MdNotificationsActive, MdPlaylistAdd } from "react-icons/md";
 import Comments from "../Comments/Comments";
 import UserContext from "../../context/UserContext";
 import VideoCard from "../shared/VideoCard";
+import { API_V1_URL } from "../../config/api";
 
 const WatchVideoDetails = () => {
   const { videoId } = useParams();
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const [videoDetails, setVideoDetails] = useState({});
   const [subscribe, setSubscribe] = useState(null);
   const [subscriberData, setSubscriberData] = useState([]);

@@ -8,14 +8,40 @@ const app = express();
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  return /^https:\/\/.*\.vercel\.app$/.test(origin);
+};
+
 // app.use(cors({
 //     origin: process.env.CORS_ORIGIN,
 //     credentials: true
 // }))
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
 
-
-
-app.use(cors({ origin: "https://videotube-wine.vercel.app/", credentials: true }));
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
 app.use(express.json({limit: "9kb"}));
 app.use(express.urlencoded({extended: true, limit: "9kb"}));

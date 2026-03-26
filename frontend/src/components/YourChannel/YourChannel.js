@@ -3,9 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import VideoCard from "../shared/VideoCard";
 import EmptyState from "../shared/EmptyState";
+import { API_V1_URL } from "../../config/api";
 
 const YourChannel = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const [channelData, setChannelData] = useState([]);
   const [channelVideos, setChannelVideos] = useState([]);
   const { username } = useParams();

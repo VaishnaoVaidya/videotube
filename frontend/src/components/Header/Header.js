@@ -14,6 +14,7 @@ import Search from "../SearchSection/Search";
 import UserSettings from "../UserSettings/UserSettings";
 import NotificationsPanel from "./NotificationsPanel";
 import UserContext from "../../context/UserContext";
+import { API_V1_URL } from "../../config/api";
 
 const topicChips = [
   { label: "All", to: "/" },
@@ -28,7 +29,7 @@ const topicChips = [
 ];
 
 const Header = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const location = useLocation();
   const navigate = useNavigate();
   const { signIn, setSignIn, sidebar, setSidebar, userProfile, setUserProfile } =

@@ -9,6 +9,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdOutlineOutlinedFlag } from "react-icons/md";
 import { AiOutlineLike } from "react-icons/ai";
 import { BiDislike, BiLike, BiSolidDislike, BiSolidLike } from "react-icons/bi";
+import { API_V1_URL } from "../../config/api";
 
 const Comments = () => {
   // Inside your component
@@ -16,7 +17,7 @@ const Comments = () => {
 
   const { videoId } = useParams();
   const currentCommentId = useRef(null);
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
 
   const { userProfile } = useContext(UserContext);
   // console.log("userProfile comment :" + JSON.stringify(userProfile._id));

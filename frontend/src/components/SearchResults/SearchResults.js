@@ -4,9 +4,10 @@ import { useLocation } from "react-router-dom";
 import PageIntro from "../shared/PageIntro";
 import VideoCard from "../shared/VideoCard";
 import EmptyState from "../shared/EmptyState";
+import { API_V1_URL } from "../../config/api";
 
 const SearchResults = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const location = useLocation();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);

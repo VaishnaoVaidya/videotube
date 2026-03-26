@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react";
 import PageIntro from "../shared/PageIntro";
 import VideoCard from "../shared/VideoCard";
 import EmptyState from "../shared/EmptyState";
+import { API_V1_URL } from "../../config/api";
 
 const DEBOUNCE_DELAY = 500;
 
 const WatchedHistory = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const [watchedHistoryVideos, setWatchedHistoryVideos] = useState([]);
   const [debouncedFetchData, setDebouncedFetchData] = useState(null);
 

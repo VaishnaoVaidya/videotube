@@ -3,9 +3,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import PageIntro from "../shared/PageIntro";
 import EmptyState from "../shared/EmptyState";
+import { API_V1_URL } from "../../config/api";
 
 const Dashboard = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const [stats, setStats] = useState(null);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);

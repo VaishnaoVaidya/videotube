@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import PageIntro from "../shared/PageIntro";
 import VideoCard from "../shared/VideoCard";
 import EmptyState from "../shared/EmptyState";
+import { API_V1_URL } from "../../config/api";
 
 const topicMatchers = {
   music: ["music", "song", "mix", "beat", "audio"],
@@ -40,7 +41,7 @@ const matchesTopic = (video, topic) => {
 };
 
 const Home = () => {
-  const host = "https://videotube-backend-5fg2.onrender.com/api/v1";
+  const host = API_V1_URL;
   const location = useLocation();
   const [videos, setVideos] = useState([]);
 
