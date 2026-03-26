@@ -6,7 +6,7 @@ import { MdOutlineVideoCall } from "react-icons/md";
 import { IoMdNotificationsOutline, IoMdHome } from "react-icons/io";
 import { AiOutlineLike } from "react-icons/ai";
 import { MdOutlineHistory } from "react-icons/md";
-import { LuUserSquare } from "react-icons/lu";
+import { LuUser } from "react-icons/lu";
 import { BsCollectionPlayFill } from "react-icons/bs";
 import { RiPlayListAddLine } from "react-icons/ri";
 import { HiOutlineChartBarSquare } from "react-icons/hi2";
@@ -56,7 +56,7 @@ const Header = () => {
           {
             label: "Your channel",
             to: userProfile?.username ? `/channel/${userProfile.username}` : "/signin",
-            icon: <LuUserSquare size={22} />,
+            icon: <LuUser size={22} />,
           },
         ],
       },
